@@ -1,20 +1,46 @@
 # Bill of materials
 
-Per wheel, and for a full set of 8 (4 corners × dual wheel).
+Per carriage (one corner, two wheels), and for all four corners.
 
-| # | Item | Spec | Per wheel | ×8 | Source / notes | Est. cost (×8) |
+## Machined (send STEP + tolerance tables from `docs/design.md`)
+
+| # | Item | File | Material | Per carriage | ×4 | Est. cost (×4) |
 |---|---|---|---|---|---|---|
-| 1 | Hub | `export/hub.step`, Al 6061-T6, tolerances per `docs/design.md` | 1 | 8 | PCBWay / JLCCNC / Xometry, or a local shop with a lathe | $60–120 |
-| 2 | Spacer | `export/spacer.step`, Al (or printed PETG for prototypes) | 1 | 8 | same CNC order | $10–20 |
-| 3 | Bearing | **608-2RS**, 8×22×7, rubber sealed. Any skateboard bearing works (Bones Reds, Zealous, or generic ABEC-5/7) | 2 | 16 | skate shop / Amazon; sold in packs of 8 | $15–30 |
-| 4 | Tire | `export/tire.stl`, TPU 95A, ~21 g each | 1 | 8 | print | ~$8 filament |
-| 5 | Speed rings | 8 mm ID × ~12 OD × 0.5 mm steel washers | 0–2 | 0–16 | skateboard "speed rings", or McMaster 8 mm shim washers. Only if the axle boss/cap contacts the outer race — see design.md | $3–5 |
-| 6 | Axle hardware | TBD after measuring: existing screw reused, or M8/M6 shoulder bolt + nyloc if original is a rivet | 1 | 8 | hardware store | $0–15 |
+| 1 | Body | `export/body.step` | Al 6061-T6, 3-axis milled | 1 | 4 | $120–240 |
+| 2 | Hub | `export/hub.step` | Al 6061-T6, turned | 2 | 8 | $60–120 |
+| 3 | Bearing spacer | `export/spacer.step` | Al (PETG print for protos) | 2 | 8 | $10–20 |
+| 4 | Axle pin | `export/axle_pin.step` | steel, Ø8 h6 × 63.4, two DIN 471 grooves | 1 | 4 | $20–40, or cut from 8 mm precision shaft and groove by hand/Dremel |
 
-**Prototype run (before ordering metal):** 1× PLA hub print, 1× TPU tire, 2× 608 bearings, 1× printed spacer.
+Services: PCBWay / JLCCNC / Xometry / Protolabs, or a local shop. Ask for one quote with all four line items — setup dominates at these quantities.
+
+## Purchased
+
+| # | Item | Spec | Per carriage | ×4 | Source | Est. (×4) |
+|---|---|---|---|---|---|---|
+| 5 | Wheel bearing | **608-2RS** 8×22×7, sealed. Any skateboard bearing (Bones Reds, Zealous, generic ABEC-5+) | 4 | 16 | skate shop / Amazon, packs of 8 | $15–30 |
+| 6 | Circlip | **DIN 471 Ø8** external retaining ring (groove Ø7.6 × 0.9) | 2 | 8 | hardware / McMaster 98541A112-ish | $3 |
+| 7 | Speed rings | 8 mm ID × ~12 OD × 0.5 steel washers ("skateboard speed rings") | 4 | 16 | skate shop | $5 |
+| 8 | Thrust bearing | **AXK1024** needle roller thrust, 10×24×2 | 1 | 4 | bearing supplier / Amazon / AliExpress | $8–12 |
+| 9 | Thrust washers | **AS1024** hardened, 10×24×1 | 2 | 8 | same, often bundled with AXK1024 | $5–8 |
+| 10 | Swivel bushing | **Oilite SAE 841 sleeve, 10 ID × 12 OD × 15 L** | 1 | 4 | McMaster 6391K-series / bearing supplier | $6–10 |
+| 11 | Retention washer | nylon 10×14×1 (or PTFE) | 1 | 4 | hardware | $2 |
+| 12 | Retention bolt | existing — reuse. If replacing: thread TBD, SHCS, + blue Loctite | 1 | 4 | — | $0 |
+| 13 | Retaining compound | Loctite 638 (axle pin in body) | — | 1 tube | — | $10 |
+
+## Printed
+
+| # | Item | File | Material | Per carriage | ×4 |
+|---|---|---|---|---|---|
+| 14 | Tire | `export/tire.stl` | TPU 95A, ~21 g, print on its side, 100 % infill | 2 | 8 |
+| 15 | Circlip cap (optional, TBD) | — | any | 2 | 8 |
+| — | Body proto | `export/body_proto.stl` | PETG, 100 % infill | 1 | — |
+| — | Hub proto | `export/hub_proto.stl` | PLA | 2 | — |
+
+**Rough total for four corners: $270–500**, dominated by the milled body. One corner only: ~$120–180 (small-quantity CNC pricing hurts).
 
 ## Tools
 
-- Bench vise or small arbor press (bearing install; a socket that bears on the outer race only)
+- Bench vise or arbor press + a socket that bears on the 608 outer race only
+- Circlip pliers (external, small)
 - Digital calipers
-- 8 mm reamer *optional* for the PLA proto bore
+- Optional: 8 mm and 12 mm reamers for the printed prototypes
