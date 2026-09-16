@@ -116,6 +116,34 @@ def make_tire(installed: bool = False) -> Part:
 
 
 # ---------------------------------------------------------------------------
+# off-the-shelf wheel dummy: Ø50 x 12 PU tread on a plastic hub whose bosses
+# stand 0.85 proud each side, single Ø6-bore bearing. Modelled as one solid.
+# ---------------------------------------------------------------------------
+def make_ots_wheel() -> Part:
+    ht, hb = P.OTS_TREAD_W / 2, P.OTS_WHEEL_W / 2
+    r_bore, r_boss, r_od = P.OTS_BORE_D / 2, P.OTS_BOSS_D / 2, P.WHEEL_OD / 2
+    profile = [
+        (r_bore, -hb), (r_bore, hb), (r_boss, hb), (r_boss, ht),
+        (r_od, ht), (r_od, -ht), (r_boss, -ht), (r_boss, -hb),
+    ]
+    wheel = revolved(profile)
+    try:
+        with BuildPart() as bp:
+            bp._add_to_context(wheel)  # noqa: SLF001
+            fillet(circ_edges(bp.part, r_od, ht), P.TIRE_EDGE_FILLET)
+        return bp.part
+    except Exception:  # pragma: no cover
+        return wheel
+
+
+def make_ots_spacer() -> Part:
+    """Flanged bush between the body face and the wheel's bearing inner race."""
+    hl = P.OTS_INBOARD_SPACER / 2
+    ri, ro = P.OTS_BORE_D / 2 + 0.1, P.OTS_SPACER_OD / 2
+    return revolved([(ri, -hl), (ri, hl), (ro, hl), (ro, -hl)])
+
+
+# ---------------------------------------------------------------------------
 # bearing dummy (for assembly visualisation only)
 # ---------------------------------------------------------------------------
 def make_bearing() -> Part:

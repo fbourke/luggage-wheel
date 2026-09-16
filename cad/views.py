@@ -19,7 +19,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 import carriage as C  # noqa: E402
 import params as P  # noqa: E402
 
-OUT = Path(__file__).resolve().parent.parent / "docs" / "carriage_views.png"
+OUT = Path(__file__).resolve().parent.parent / "docs" / (
+    "carriage_views.png" if P.OTS else "carriage_views_machined.png")
 
 COLORS = {
     "body": "#2b5d8c", "axle_pin": "#555555", "bushing": "#b87333",
@@ -77,7 +78,7 @@ def main() -> None:
         a.text(xl[0], -P.LAND_TO_FLOOR + 0.8, "floor", fontsize=7)
 
     fig.suptitle(
-        f"Carriage — Ø{P.WHEEL_OD:g}x{P.HUB_W:g} wheels, trail {P.TRAIL:g}, neck {P.NECK_W:g}, "
+        f"Carriage ({P.WHEEL_SOURCE} wheels) — Ø{P.WHEEL_OD:g}x{P.TREAD_W:g} tread, trail {P.TRAIL:g}, neck {P.NECK_W:g}, "
         f"overall {P.OVERALL_W:.1f} wide, shaft {P.SHAFT_PROTRUSION:g} land→end, "
         f"recess R{P.RECESS_R:.1f} (swing margin {P.SWING_MARGIN:.1f})",
         fontsize=10,

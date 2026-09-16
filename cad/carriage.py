@@ -111,8 +111,13 @@ def make_fit_proto() -> Part:
     fused axle. Screws straight onto the case with the real M5 bolt + washer.
     Wheels don't turn; the point is the recess, the swing, and the retention."""
     proto = make_body(fit_proto=True)
-    axle_l = 2 * (P.WHEEL_CENTRE_Y + P.HUB_W / 2)
+    axle_l = 2 * (P.WHEEL_CENTRE_Y + P.WHEEL_W / 2)
     proto += _cyl_y(P.AXLE_PIN_D / 2, axle_l, P.TRAIL, P.AXLE_Z)
+    if P.OTS:
+        wheel = W.make_ots_wheel() + Cylinder(P.OTS_BOSS_D / 2, P.OTS_WHEEL_W)   # fill the bore
+        for side in (+1, -1):
+            proto += wheel.moved(wheel_location(side))
+        return proto
     tire = W.make_tire(installed=True)
     for side in (+1, -1):
         loc = wheel_location(side)
@@ -165,8 +170,6 @@ def wheel_location(side: int) -> Location:
 
 
 def make_assembly() -> Compound:
-    hub, spacer, tire, brg = W.make_hub(), W.make_spacer(), W.make_tire(installed=True), W.make_bearing()
-    z_brg = P.HUB_W / 2 - P.BRG_W / 2
     children = []
 
     def add(shape, label):
@@ -178,6 +181,19 @@ def make_assembly() -> Compound:
     add(Pos(0, 0, P.BODY_TOP_Z - P.BUSHING_L) * make_bushing(), "bushing")
     add(Pos(0, 0, P.BODY_TOP_Z) * make_thrust_stack(), "thrust_AXK1024")
     add(make_shaft(), "case_shaft_ref")
+
+    if P.OTS:
+        wheel, spacer = W.make_ots_wheel(), W.make_ots_spacer()
+        z_sp = -(P.OTS_WHEEL_W + P.OTS_INBOARD_SPACER) / 2      # inboard of the wheel
+        for side in (+1, -1):
+            loc = wheel_location(side)
+            tag = "L" if side > 0 else "R"
+            add(wheel.moved(loc), f"ots_wheel_{tag}")
+            add(spacer.moved(loc * Location((0, 0, side * z_sp))), f"spacer_{tag}")
+        return Compound(children=children, label="carriage")
+
+    hub, spacer, tire, brg = W.make_hub(), W.make_spacer(), W.make_tire(installed=True), W.make_bearing()
+    z_brg = P.HUB_W / 2 - P.BRG_W / 2
     for side in (+1, -1):
         loc = wheel_location(side)
         tag = "L" if side > 0 else "R"
@@ -197,7 +213,7 @@ def clearance_report() -> list[str]:
     out = []
     r_t = P.WHEEL_OD / 2
     ax, az = P.TRAIL, P.AXLE_Z
-    y_in = P.WHEEL_CENTRE_Y - P.TIRE_W / 2       # tire inner face
+    y_in = P.WHEEL_CENTRE_Y - P.TREAD_W / 2      # tread inner face
 
     # thrust washer (Ø24 disc, z in [BODY_TOP_Z, BODY_TOP_Z + stack]) vs tire
     # worst point: washer rim toward the wheel, at the washer's lowest z

@@ -7,6 +7,20 @@ Naming: *_D = diameter, *_R = radius, *_W = axial width, *_L = length.
 """
 
 import math
+import os
+
+# ---------------------------------------------------------------------------
+# Wheel source. Two variants of the same carriage:
+#   "ots"      – off-the-shelf Ø50x12 dual-spinner luggage wheels (PU tread on
+#                a plastic hub, one Ø6-bore ball bearing, ~13.7 over the hub
+#                bosses). Sold in 8-packs on Amazon/AliExpress; the format the
+#                case shipped with. See docs/wheel_sourcing.md.   <- default
+#   "machined" – our turned Al hub on 2x688 + printed TPU tire.
+# Select with the WHEEL_SOURCE environment variable.
+# ---------------------------------------------------------------------------
+WHEEL_SOURCE = os.environ.get("WHEEL_SOURCE", "ots")
+assert WHEEL_SOURCE in ("ots", "machined")
+OTS = WHEEL_SOURCE == "ots"
 
 # ---------------------------------------------------------------------------
 # Envelope (measured from the original wheel)
@@ -17,9 +31,20 @@ HUB_W = 11.5             # measured: original wheel width, face to face
 # original wheel width rather than going wider.
 
 # ---------------------------------------------------------------------------
-# Axle / bearing: Ø8 pin -> two 688 bearings per 11.5 mm hub
+# Off-the-shelf wheel (generic "50 x 12 mm luggage replacement wheel")
 # ---------------------------------------------------------------------------
-AXLE_D = 8.0
+OTS_TREAD_W = 12.0       # listed rim/tread width
+OTS_WHEEL_W = 13.7       # overall, over the hub bosses (0.85 proud each side)
+OTS_BOSS_D = 20.0        # hub boss diameter (estimated from photos; non-critical)
+OTS_BORE_D = 6.0         # single ball bearing, Ø6 bore (626/696/606 class)
+OTS_INBOARD_SPACER = 1.0 # flanged bush seated in the bearing inner race, wheel <-> body
+OTS_SPACER_OD = 8.0
+
+# ---------------------------------------------------------------------------
+# Axle / bearing (machined variant: Ø8 pin -> two 688 bearings per 11.5 mm hub;
+# OTS variant: Ø6 pin straight through the wheels' own bearings)
+# ---------------------------------------------------------------------------
+AXLE_D = OTS_BORE_D if OTS else 8.0
 
 # Bearing catalogue: name -> (bore, OD, width, housing-shoulder max Ø per SKF)
 BEARINGS = {
@@ -31,7 +56,7 @@ BEARINGS = {
 }
 BEARING = "688"          # 8x16x5: two of them fit an 11.5 mm hub with a 1.5 mm shoulder
 BRG_ID, BRG_OD, BRG_W, BRG_SHOULDER_MAX = BEARINGS[BEARING]
-assert BRG_ID == AXLE_D, "bearing bore must match axle"
+assert OTS or BRG_ID == AXLE_D, "bearing bore must match axle"
 BEARINGS_PER_WHEEL = 2
 
 # Bearing bore in hub. Nominal = BRG_OD; the *tolerance* is what makes the
@@ -72,6 +97,12 @@ TIRE_EDGE_FILLET = 2.0   # tread edge round-over
 TIRE_MIN_THICKNESS = (WHEEL_OD - FLANGE_D) / 2
 assert TIRE_MIN_THICKNESS >= 4.0, "tire too thin over flange"
 
+# --- unified wheel-unit dimensions used by the carriage --------------------
+WHEEL_W = OTS_WHEEL_W if OTS else HUB_W        # axial length the axle stack sees
+TREAD_W = OTS_TREAD_W if OTS else TIRE_W       # what swings in the recess
+INBOARD_T = OTS_INBOARD_SPACER if OTS else 0.5 # body face -> wheel unit
+OUTBOARD_T = 0.5                               # wheel unit -> circlip side ring
+
 # ===========================================================================
 # CARRIAGE (the body that swivels on the case's Ø10 shaft and carries both
 # wheels). Coordinate frame for the carriage assembly:
@@ -86,7 +117,12 @@ assert TIRE_MIN_THICKNESS >= 4.0, "tire too thin over flange"
 
 # --- measured -------------------------------------------------------------
 LAND_TO_FLOOR = 53.5       # land face to floor, on wheels
-TRAIL = 18.1               # shaft axis -> axle axis, horizontal
+ORIG_TRAIL = 18.1          # original: shaft axis -> axle axis, horizontal
+# Trail is ours to choose; the recess wall caps hypot(rear tread edge, half
+# width). The OTS wheels are 2.2 mm wider over the pair, so we pull the axle
+# forward to keep the swing radius at the original's. 0.32 D is still a
+# healthy caster trail.
+TRAIL = 16.0 if OTS else ORIG_TRAIL
 SHAFT_D = 10.0             # measured 9.82: plain round, fixed to case; body swivels on it
 SHAFT_PROTRUSION = 22.92   # land face -> shaft end face
 SKIN_Z = -SHAFT_PROTRUSION # case bottom skin is flush with the shaft end
@@ -151,7 +187,7 @@ NECK_W = WHEEL_GAP - 2 * 0.5         # 16.0: body width between the wheels
 WHEEL_CLEAR = 1.5                    # radial gap body <-> tire everywhere
 BOSS_R = 13.0                        # covers the Ø24 thrust washer with 1 mm to spare
 assert BOSS_R >= THRUST_OD / 2 + 0.5
-BOSS_TAPER_X = 3.0                   # plan view: boss sides run from (0, ±BOSS_R) to (here, ±NECK_W/2)
+BOSS_TAPER_X = 2.0                   # plan view: boss sides run from (0, ±BOSS_R) to (here, ±NECK_W/2)
 # Where the boss overhangs the wheels (|y| > NECK_W/2) it is scooped to the
 # wheel circle + WHEEL_CLEAR; this is the boss's minimum height over the tire.
 _boss_wing_h = BODY_TOP_Z - (AXLE_Z + math.sqrt((WHEEL_OD / 2 + WHEEL_CLEAR) ** 2 - (BOSS_TAPER_X - TRAIL) ** 2))
@@ -186,32 +222,33 @@ ARM_PROFILE = [_p_a, _t_a, (TRAIL, AXLE_Z), _t_b, _p_b, (BOSS_R, BOSS_BOTTOM_Z)]
 _head_rear_x = RETAIN_BOLT_HEAD_D / 2
 assert _head_rear_x < ARM_FRONT_X, "arm would overlap the bolt head"
 
-# --- wheel axle: single Ø8 ground pin through the body, circlip each end --
-AXLE_PIN_D = AXLE_D                  # 8 h6 precision shaft
-SPEED_RING_T = 0.5                   # 8x12x0.5 steel washer, both sides of each hub
-CIRCLIP_GROOVE_W = 0.9               # DIN 471 for Ø8: groove Ø7.6 x 0.9
-CIRCLIP_GROOVE_D = 7.6
-CIRCLIP_T = 0.8
+# --- wheel axle: single ground pin through the body, circlip each end -----
+AXLE_PIN_D = AXLE_D                  # h6 precision shaft
+SPEED_RING_T = OUTBOARD_T            # thin steel washer between wheel and circlip
+# DIN 471 external retaining rings: shaft -> (groove Ø, groove width, ring thickness)
+CIRCLIPS = {8.0: (7.6, 0.9, 0.8), 6.0: (5.7, 0.8, 0.7)}
+CIRCLIP_GROOVE_D, CIRCLIP_GROOVE_W, CIRCLIP_T = CIRCLIPS[AXLE_PIN_D]
 AXLE_END_CLEAR = 0.3                 # stack float
 AXLE_END_STUB = 1.5                  # pin beyond the circlip groove
-# stack from body face outward: ring | hub | ring | clearance | circlip | stub
-_half_stack = NECK_W / 2 + SPEED_RING_T + HUB_W + SPEED_RING_T + AXLE_END_CLEAR
+# stack from body face outward: inboard spacer | wheel unit | ring | clearance | circlip | stub
+_half_stack = NECK_W / 2 + INBOARD_T + WHEEL_W + OUTBOARD_T + AXLE_END_CLEAR
 AXLE_GROOVE_Y = _half_stack + CIRCLIP_GROOVE_W / 2
 AXLE_PIN_L = 2 * (_half_stack + CIRCLIP_GROOVE_W + AXLE_END_STUB)
-WHEEL_CENTRE_Y = NECK_W / 2 + SPEED_RING_T + HUB_W / 2
-OVERALL_W = 2 * (WHEEL_CENTRE_Y + TIRE_W / 2)
+WHEEL_CENTRE_Y = NECK_W / 2 + INBOARD_T + WHEEL_W / 2
+OVERALL_W = 2 * (WHEEL_CENTRE_Y + TREAD_W / 2)
 
 # --- recess swing check ----------------------------------------------------
 # The wheel's outer tread edge is the point farthest from the swivel axis.
 # Above the skin plane the wheel is a chord of its circle; the widest chord
 # inside the recess is at SKIN_Z. (Sharp-edge tire, conservative: the 2 mm
 # tread fillet pulls the real corner in by ~0.6 mm.)
-_tire_y_out = WHEEL_CENTRE_Y + TIRE_W / 2
+_tire_y_out = WHEEL_CENTRE_Y + TREAD_W / 2
 _dz_skin = SKIN_Z - AXLE_Z
 _x_rear_at_skin = TRAIL + math.sqrt((WHEEL_OD / 2) ** 2 - _dz_skin ** 2)
 SWING_R = math.hypot(_x_rear_at_skin, _tire_y_out)
 _orig_y_out = ORIG_WHEEL_GAP / 2 + 11.5
-ORIG_SWING_R = math.hypot(_x_rear_at_skin, _orig_y_out)   # what the case was built for
+_orig_x_rear = ORIG_TRAIL + math.sqrt((WHEEL_OD / 2) ** 2 - _dz_skin ** 2)
+ORIG_SWING_R = math.hypot(_orig_x_rear, _orig_y_out)   # what the case was built for
 SWING_MARGIN = RECESS_R - SWING_R
 assert SWING_R <= ORIG_SWING_R + 0.1, "wheels swing wider than the original; recess wall"
 # Body (boss + arm) must clear the recess wall by a lot above the skin plane

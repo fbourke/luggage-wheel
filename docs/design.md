@@ -2,34 +2,53 @@
 
 Replacement for a failed dual-wheel spinner carriage (Rimowa-style knockoff):
 the whole unit that bolts onto the case's Ø10 swivel shaft and carries two
-Ø50 × 11.5 mm wheels. The original's wheels ran on plain plastic bores, which
+Ø50 × ~12 mm wheels. The original's wheels ran on plain plastic bores, which
 wore out.
 
 ![carriage](carriage_views.png)
 
-## Architecture
+## Two wheel variants, one body
+
+`params.py` has a `WHEEL_SOURCE` switch (environment variable; default `ots`):
+
+- **`ots`** — off-the-shelf Ø50 × 12 dual-spinner luggage wheels (PU tread,
+  plastic hub, one Ø6-bore ball bearing, 13.7 over the hub bosses; ~$2.50
+  each in 8-packs). Ø6 axle, trail 16. **This is the plan** — see
+  [`wheel_sourcing.md`](wheel_sourcing.md) for the research.
+- **`machined`** — our turned Al hub on 2× 688 with a printed TPU tire. Ø8
+  axle, trail 18.1. Kept as the fallback if the bought wheels disappoint;
+  builds into `export/machined/`.
+
+The body is the same part except for the axle bore (Ø6 vs Ø8) and its
+position (trail). Everything below applies to both unless it says otherwise;
+the "Wheel" chapter is the machined variant.
+
+## Architecture (`ots`)
 
 | Part | Material | Made by | Qty / carriage |
 |---|---|---|---|
 | Body | Al 6061-T6 | outsourced CNC (3-axis milled) | 1 |
-| Axle pin | Ø8 h6 ground steel shaft, 46.4 long, 2 circlip grooves | cut + grooved, or CNC order | 1 |
-| Circlip | DIN 471 Ø8 | purchased | 2 |
-| Hub | Al 6061-T6 | outsourced CNC (pure turned part) | 2 |
-| Wheel bearing | 688-2RS (8×16×5) | purchased | 4 |
-| Bearing spacer | Al or printed | same CNC order / FDM | 2 |
-| Speed rings | steel 8×12×0.5 | skateboard "speed rings" | 4 |
-| Tire | TPU 95A | FDM | 2 |
+| Axle pin | Ø6 h6 ground steel shaft, 51.6 long, 2 circlip grooves | cut + grooved, or CNC order | 1 |
+| Circlip | DIN 471 Ø6 | purchased | 2 |
+| Wheel | generic Ø50 × 12 PU luggage wheel, Ø6 bearing | purchased, 8-pack | 2 |
+| Inboard spacer bush | Ø8 / Ø6.1 × 1.0, steel or Al (kits include similar) | kit / turned / printed | 2 |
+| Outboard ring | steel 6×10×0.5 washer | purchased | 2 |
 | Swivel thrust bearing | AXK1024 needle thrust + 2× AS1024 washers | purchased | 1 set |
 | Swivel bushing | Oilite SAE 841, 10×12×15 | purchased | 1 |
 | Retention washer | nylon ~6×14×1.5 | purchased | 1 |
 | Retention bolt | existing M5 button head, 19 under head | reuse | 1 |
+
+For `machined` swap the wheel rows for: Ø8 axle pin 46.4 long, DIN 471 Ø8
+circlips, 2× Al hub, 4× 688-2RS, 2× Al spacer ring, 4× 8×12×0.5 speed rings,
+2× TPU tire.
 
 Everything is parametrised in [`cad/params.py`](../cad/params.py); regenerate
 with `uv run cad/generate.py`.
 
 ## Coordinate frame
 
-`X` fore/aft with the shaft axis at X = 0 and the wheels at X = +18.1 (trail);
+`X` fore/aft with the shaft axis at X = 0 and the wheels at X = +TRAIL (16 for
+`ots`, 18.1 for `machined`);
 `Y` across; `Z` up with **Z = 0 at the land** — the raised plastic face at the
 ceiling of the corner recess that the swivel bears on. The case's bottom skin
 is at Z = −22.92, flush with the shaft end; floor at Z = −53.5.
@@ -61,9 +80,11 @@ below the land** and the axle is 28.5 mm down. Consequences:
 - **Width is capped by the recess wall.** The farthest point from the swivel
   axis is the outer tread edge where the wheel crosses the skin plane; the
   original (16.63 gap, 11.5 wheels) swings at R 46.86 against a ~47.4 wall.
-  We keep 11.5 mm wheels and a 17 mm gap so the swing radius is identical to
-  the original's — overall width 39.6, same as stock. Going wider is not an
-  option without shortening the trail.
+  Width and trail trade off against each other: `machined` keeps 11.5 mm
+  wheels at the original 18.1 trail (swing R 46.86, overall 39.6); `ots`
+  wheels are 13.7 over the bosses so the trail drops to 16.0, which brings the
+  swing radius *in* to 45.9 (overall 43.7). `params.py` asserts the swing
+  radius never exceeds the original's.
 
 `generate.py` prints an analytic clearance report (thrust washer ↔ tire, neck
 ↔ tire, wheel swing ↔ recess wall, body and bolt head ↔ floor). Check it
@@ -104,12 +125,19 @@ measured 22.92 mm shaft length.
 
 ## Wheel axle — single through-pin
 
-One **Ø8 h6 ground steel pin** through the body with a **DIN 471 circlip** at
-each end. Stack, from the body outward on each side:
+One **ground steel pin** (Ø6 h6 for `ots`, Ø8 h6 for `machined`) through the
+body with a **DIN 471 circlip** at each end. Stack, from the body outward on
+each side:
 
 ```
-body | speed ring 0.5 | hub 11.5 (2× 688 + spacer) | speed ring 0.5 | 0.3 float | circlip | 1.5 stub
+ots:      body | spacer bush 1.0 | wheel 13.7 (bosses + bearing) | ring 0.5 | 0.3 float | circlip | 1.5 stub
+machined: body | speed ring 0.5  | hub 11.5 (2× 688 + spacer)     | ring 0.5 | 0.3 float | circlip | 1.5 stub
 ```
+
+For `ots` the inboard bush is a small flanged tube that seats in the wheel's
+bearing inner race and holds the rotating plastic hub boss off the body face
+(the Amazon kits include these). Ø6 pin bending stress at full corner load is
+~60 MPa — fine for any steel.
 
 Why not two shoulder screws: M6×Ø8 shoulder screws from opposite sides each
 need ~9.5 mm of thread and would collide inside a 16 mm body. The pin has no
@@ -127,7 +155,7 @@ the body and the circlips.
 |---|---|---|---|
 | Bushing bore | Ø12 H7 (+0 / +0.018) | — | Oilite press fit; bushing closes ~0.02 on its ID when pressed, which is what gives the running fit on the Ø10 shaft |
 | Bushing bore ⟂ to top face | — | ≤ 0.03 over 15 mm | swivel axis must be square to the thrust washer |
-| Axle bore | Ø8.00 | +0.005 / +0.015 | light slip fit for an 8 h6 pin, Loctite 638 |
+| Axle bore | Ø6.00 (`ots`) / Ø8.00 (`machined`) | +0.005 / +0.015 | light slip fit for an h6 pin, Loctite 638 |
 | Axle bore ⟂ to the Y faces of the neck | — | ≤ 0.02 | wheels must run parallel |
 | Neck width | 16.0 | ±0.05 | sets wheel gap |
 | Boss bottom flat | Z −21.12 from top face = 17.12 | ±0.1 | sets lift float on the retention washer |
@@ -136,7 +164,10 @@ the body and the circlips.
 
 Finish: as-machined or bead-blast + anodise. Break all edges.
 
-# Wheel
+# Wheel (`machined` variant only)
+
+Fallback if the bought Ø50 × 12 wheels turn out badly. Skip this chapter for
+the `ots` build.
 
 ![wheel cross-section](cross_section.png)
 
@@ -209,30 +240,31 @@ races and never drag on the outer race or the hub face.
 
 # Prototype sequence
 
-1. ~~Measure the open questions~~ — done 2026-09-15; the first PETG body proto
-   was printed against the *assumed* envelope (19 mm neck, Ø15 counterbore) and
-   is superseded. Re-print.
-2. Print **`carriage_fit_proto.stl`** — one piece: body, the 4 mm thrust stack
-   as a solid collar, a plain Ø10.4 bore for the bare shaft, and solid wheels
-   fused on. Screw it onto the case with the existing M5 bolt and a Ø14
-   washer; check the recess ceiling, the 360° swing against the recess wall,
-   lift retention, and that the case sits level. Wheels don't turn. Print it
-   wheel-face down or upright, supports on; ream the shaft bore if tight.
-   Then `body_proto.stl` (PETG, 100 % infill), `hub_proto.stl` ×2 (PLA),
-   `tire.stl` ×2 (TPU) for the bearing/bushing/tire fits. FDM bores come out
-   undersize — ream/scrape the Ø16 bores until a 688 pushes in by hand and the
-   Ø8/Ø12 bores to a slip fit. All of this is a **fit and envelope check
-   only**; a printed body will flex.
-3. Buy: 4× 688-2RS, AXK1024 + 2× AS1024, Oilite 10×12×15, a length of 8 mm
-   precision shaft (or an 8 mm dowel pin ≥ 50 long), 2× DIN 471 Ø8 circlips,
-   speed rings, nylon ~6×14×1.5 washer.
-4. Assemble on the case. Check: wheel ↔ recess ceiling, wheel swing ↔ recess
-   wall through 360°, thrust washer ↔ tire, body ↔ tire, swivel free under
-   load, lift retention works, case sits level.
-5. Adjust → regenerate → send `body.step`, `hub.step`, `spacer.step`,
-   `axle_pin.step` + the tolerance tables to a CNC shop. Order for all four
-   corners if the budget allows; the other three will fail the same way.
-6. Print 8 tires (~21 g TPU each), press bearings, fit tires, install.
+1. ~~Measure the open questions~~ — done 2026-09-15.
+2. ~~Print `carriage_fit_proto.stl` and screw it on~~ — done 2026-09-16 with
+   the 11.5-wide/18.1-trail geometry: fits, pivots freely, ride height matches
+   the other corners. The `ots` geometry (13.7 wheels, trail 16) swings
+   *inside* that envelope, so it doesn't need its own fit check.
+3. **Buy an 8-pack of Ø50 × 12 PU luggage wheels** (e.g. Amazon B0DLNMPGF9,
+   ~$20) and measure them: OD, tread width, width over the bosses, bore, boss
+   diameter. Update `OTS_*` in `params.py` if they differ from 50 / 12 / 13.7 /
+   6 / 20. Spin one on a Ø6 pin: if the bearing feels gritty or the wheel rocks
+   noticeably, that's the cue to fall back to `machined`.
+4. Print `body_proto.stl` (PETG, 100 % infill) with the real Ø6 axle bore and
+   trail; ream the Ø6 and Ø12 bores to a slip fit. Mount the bought wheels on
+   a 6 mm pin (or the kit's own axle) and check the wheel ↔ boss scoop and
+   thrust-washer gaps in the flesh.
+5. Buy the rest: AXK1024 + 2× AS1024, Oilite 10×12×15, Ø6 h6 precision shaft
+   (or a 6 mm dowel pin ≥ 55 long), 2× DIN 471 Ø6 circlips, 6×10×0.5
+   washers, nylon ~6×14×1.5 washer.
+6. Assemble on the case. Check: wheel ↔ recess ceiling, swing through 360°,
+   thrust washer ↔ tire, body ↔ tire, swivel free under load, lift retention,
+   case level.
+7. Adjust → regenerate → send `body.step` + `axle_pin.step` (+ the spacer
+   bushes if the kit's don't suit) with the tolerance tables to a CNC shop.
+   Four of each; the other three corners will fail the same way.
+8. For the `machined` fallback: `WHEEL_SOURCE=machined uv run cad/generate.py`,
+   then hubs/spacers/pins from `export/machined/`, 688s, printed TPU tires.
 
 # Open questions
 
@@ -246,12 +278,15 @@ Measured 2026-09-15 (all now in `params.py`):
 - [x] Corner recess: quarter circle, wall ~42.4 from the shaft OD (R ≈ 47.4).
 - [x] All four carriages eventually.
 
+Test-fit 2026-09-16 (blocky body, 11.5 wheels, trail 18.1): fits the recess,
+pivots perfectly, height matches the OEM corners.
+
 Still open:
 
-- [ ] Recess radius was a rough caliper measurement. Confirm on the printed
-      proto that the wheels swing a full 360° without touching the wall; the
-      analytic margin is 0.5 mm (sharp-edged tire; the 2 mm tread fillet adds
-      ~0.6 mm more).
+- [ ] Actual dimensions of the bought Ø50 × 12 wheels (see prototype step 3).
+
+- [x] Recess radius: the printed proto swings a full 360° at swing R 46.86;
+      the `ots` geometry swings at 45.9.
 - [ ] Is the recess wall vertical, or does it flare? (Only matters if we ever
       want wider wheels.)
 - [ ] Shaft surface: plain steel? chrome? any wear from the old plastic bore?
