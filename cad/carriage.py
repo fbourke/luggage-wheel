@@ -3,7 +3,7 @@ Carriage: the aluminium body that swivels on the case's Ø10 shaft and carries
 both wheels on a single Ø8 through-axle.
 
 Frame (see params.py): X fore/aft (+X toward wheels), Y across, Z up,
-Z=0 = case bottom skin, shaft axis = Z axis.
+Z=0 = the land (recess ceiling) the swivel bears on, shaft axis = Z axis.
 """
 
 from __future__ import annotations
@@ -12,12 +12,12 @@ import math
 
 from build123d import (
     Axis,
-    Box,
     Circle,
     Compound,
     Cylinder,
     Part,
     Plane,
+    Polygon,
     Pos,
     Rectangle,
     Rot,
@@ -40,6 +40,26 @@ def _cyl_z(radius: float, z0: float, z1: float, x: float = 0.0) -> Part:
     return Pos(x, 0, (z0 + z1) / 2) * Cylinder(radius, abs(z1 - z0))
 
 
+def _fillet_vertical(body: Part, r: float) -> Part:
+    """Fillet every Z-parallel edge longer than 2r, individually; skip failures."""
+    targets = [e.center() for e in body.edges().filter_by(Axis.Z) if e.length > 2 * r]
+    done = skipped = 0
+    for c in targets:
+        edges = body.edges().filter_by(Axis.Z)
+        e = min(edges, key=lambda e: (e.center() - c).length)
+        if (e.center() - c).length > 0.5:
+            skipped += 1
+            continue
+        try:
+            body = fillet([e], r)
+            done += 1
+        except Exception:
+            skipped += 1
+    if skipped:
+        print(f"  ! vertical fillets: {done} done, {skipped} skipped")
+    return body
+
+
 # ---------------------------------------------------------------------------
 # body
 # ---------------------------------------------------------------------------
@@ -47,46 +67,41 @@ def make_body(fit_proto: bool = False) -> Part:
     """The machined body. fit_proto=True makes the one-piece printable
     variant: thrust stack as a solid collar, straight bore for the bare shaft
     (no bushing), and no axle bore (the wheels get fused on)."""
-    top, bot = P.BODY_TOP_Z, P.BODY_BOTTOM_Z
-    ax, az, R = P.TRAIL, P.AXLE_Z, P.NECK_REAR_R
-    x0 = P.HEAD_FRONT_X
+    top, flat = P.BODY_TOP_Z, P.BOSS_BOTTOM_Z
+    ax, az = P.TRAIL, P.AXLE_Z
+    hw = P.NECK_W / 2
 
-    # --- neck: side profile. Full-depth front only where the head is; below
-    #     the head the front steps back to LOWER_FRONT_X; rear rounded on axle.
-    hb, xl = P.HEAD_BOTTOM_Z, P.LOWER_FRONT_X
-    upper = Pos((x0 + ax + R) / 2, (hb + top) / 2) * Rectangle(ax + R - x0, top - hb)
-    mid = Pos((xl + ax + R) / 2, (az + hb) / 2) * Rectangle(ax + R - xl, hb - az)
-    lower = Pos((xl + ax) / 2, (az + bot) / 2) * Rectangle(ax - xl, az - bot)
-    rear = Pos(ax, az) * Circle(R)
-    neck = extrude(Plane.XZ * (upper + mid + lower + rear), amount=P.NECK_W / 2, both=True)
+    # --- between the wheels (neck width): side profile = boss rectangle +
+    #     tangent-line arm + round about the axle
+    boss_rect = Pos(0, (top + flat) / 2) * Rectangle(2 * P.BOSS_R, top - flat)
+    arm = Polygon(*P.ARM_PROFILE, align=None)
+    axle_boss = Pos(ax, az) * Circle(P.AXLE_BOSS_R)
+    neck = extrude(Plane.XZ * (boss_rect + arm + axle_boss), amount=hw, both=True)
 
-    # --- head: wide block in front of the wheels, sculpted to the wheel circle
-    xr = P.HEAD_REAR_X
-    head = Pos((x0 + xr) / 2, 0, (hb + top) / 2) * Box(xr - x0, P.HEAD_W, top - hb)
-    head -= _cyl_y(P.WHEEL_OD / 2 + P.WHEEL_CLEAR, P.HEAD_W + 10, ax, az)
+    # --- swivel boss, plan view: half-round in front of the shaft axis, then
+    #     straight tapers to the neck width. Scooped to the wheel circle where
+    #     it overhangs the wheels.
+    half_round = Circle(P.BOSS_R) - Pos(P.BOSS_R, 0) * Rectangle(2 * P.BOSS_R, 4 * P.BOSS_R)
+    taper = Polygon((0, P.BOSS_R), (P.BOSS_TAPER_X, hw), (P.BOSS_TAPER_X, -hw), (0, -P.BOSS_R), align=None)
+    boss = extrude(Plane.XY.offset(flat) * (half_round + taper), amount=top - flat)
+    boss -= _cyl_y(P.WHEEL_OD / 2 + P.WHEEL_CLEAR, 2 * P.BOSS_R + 10, ax, az)
 
-    body = neck + head
+    body = neck + boss
 
-    # --- vertical-edge fillets (front corners, neck rear corners)
-    try:
-        vert = [e for e in body.edges().filter_by(Axis.Z) if e.length > 2 * P.BODY_EDGE_R]
-        body = fillet(vert, P.BODY_EDGE_R)
-    except Exception as exc:  # pragma: no cover
-        print(f"  ! body edge fillet failed ({exc}); continuing unfilleted")
+    # --- vertical-edge fillets (taper/neck junction, boss rear corners),
+    #     one edge at a time so an awkward edge at the scoop doesn't abort all
+    body = _fillet_vertical(body, P.BODY_EDGE_R)
 
     if fit_proto:
         body += _cyl_z(P.THRUST_OD / 2, top, 0.0)                 # thrust stack as a collar
-        body -= _cyl_z(P.PROTO_SHAFT_BORE_D / 2, P.RETAIN_CEILING_Z - 1, 1.0)
-        body -= _cyl_z(P.RETAIN_CBORE_D / 2, bot - 1, P.RETAIN_CEILING_Z)
+        body -= _cyl_z(P.PROTO_SHAFT_BORE_D / 2, flat - 1, 1.0)
         return body
 
-    # --- swivel bore: bushing seat from the top, clearance bore below it,
-    #     retention counterbore from the bottom
+    # --- swivel bore: bushing seat from the top, clearance bore down to the flat
     body -= _cyl_z(P.BUSHING_BORE_D / 2, top - P.BUSHING_L, top + 1)
-    body -= _cyl_z(P.SHAFT_CLEAR_BORE_D / 2, P.RETAIN_CEILING_Z - 1, top - P.BUSHING_L + 1)
-    body -= _cyl_z(P.RETAIN_CBORE_D / 2, bot - 1, P.RETAIN_CEILING_Z)
+    body -= _cyl_z(P.SHAFT_CLEAR_BORE_D / 2, flat - 1, top - P.BUSHING_L + 1)
 
-    # --- axle bore through the neck
+    # --- axle bore through the arm
     body -= _cyl_y(P.AXLE_PIN_D / 2, P.NECK_W + 2, ax, az)
     return body
 
@@ -203,16 +218,17 @@ def clearance_report() -> list[str]:
     out.append(f"wheel swing -> recess   : {P.SWING_MARGIN:5.2f} mm  "
                f"(swing R {P.SWING_R:.2f}, original {P.ORIG_SWING_R:.2f}, wall R {P.RECESS_R:.1f})")
 
-    # head rear surface is offset WHEEL_CLEAR from the tire by construction
-    out.append(f"body head -> tire       : {P.WHEEL_CLEAR:5.2f} mm  (by construction)")
+    # boss scoop is offset WHEEL_CLEAR from the tire by construction
+    out.append(f"boss scoop -> tire      : {P.WHEEL_CLEAR:5.2f} mm  (by construction)")
 
     # neck side faces vs tire inner faces
     out.append(f"neck face -> tire face  : {y_in - P.NECK_W / 2:5.2f} mm")
 
-    # floor vs body bottom
+    # floor vs body bottom and bolt head
     out.append(f"body bottom -> floor    : {P.BODY_BOTTOM_Z + P.LAND_TO_FLOOR:5.2f} mm")
+    out.append(f"bolt head -> floor      : {P.BOLT_HEAD_BOTTOM_Z + P.LAND_TO_FLOOR:5.2f} mm  (exposed under the flat)")
     out.append(f"body below case skin    : {P.SKIN_Z - P.BODY_BOTTOM_Z:5.2f} mm")
 
-    # counterbore wall
-    out.append(f"counterbore wall (neck) : {P.CBORE_WALL:5.2f} mm")
+    # bushing wall at the neck sides
+    out.append(f"bushing wall (neck side): {(P.NECK_W - P.BUSHING_BORE_D) / 2:5.2f} mm")
     return out

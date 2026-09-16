@@ -64,11 +64,11 @@ def main() -> None:
           f"shoulder Ø{P.SHOULDER_D} x {P.SHOULDER_W}   {W.mass_g(hub, 'Al6061'):.1f} g Al")
     print(f"tire          : Ø{P.WHEEL_OD} x {P.TIRE_W}, printed ID Ø{P.BED_D*(1-P.TIRE_STRETCH):.2f} "
           f"(stretch {P.TIRE_STRETCH*100:.1f}%)   {W.mass_g(tire, 'TPU95A'):.1f} g TPU")
-    print(f"body          : {P.HEAD_W} wide head / {P.NECK_W} neck, top Z={P.BODY_TOP_Z}, "
+    print(f"body          : Ø{2*P.BOSS_R:g} boss / {P.NECK_W} neck / Ø{2*P.AXLE_BOSS_R:g} axle boss, top Z={P.BODY_TOP_Z}, "
           f"bottom Z={P.BODY_BOTTOM_Z}   {W.mass_g(body, 'Al6061'):.1f} g Al")
     print(f"axle pin      : Ø{P.AXLE_PIN_D} x {P.AXLE_PIN_L:.1f}, circlip grooves at ±{P.AXLE_GROOVE_Y:.2f}")
     print(f"swivel        : AXK1024 thrust + Oilite {P.BUSHING_ID:g}x{P.BUSHING_OD:g}x{P.BUSHING_L:g} bushing, "
-          f"{P.RETAIN_BOLT} retention bolt in Ø{P.RETAIN_CBORE_D} cbore")
+          f"{P.RETAIN_BOLT} retention bolt + Ø{P.RETAIN_WASHER_OD:g} washer on the flat at Z={P.BOSS_BOTTOM_Z:.2f}")
     print(f"overall width : {P.OVERALL_W:.1f} mm  (wheel centres ±{P.WHEEL_CENTRE_Y:.2f})")
     print(f"fit proto     : one piece, {W.mass_g(proto, 'PLA'):.0f} g PLA / {W.mass_g(proto, 'PLA') * 1.27 / 1.24:.0f} g PETG, "
           f"Ø{P.PROTO_SHAFT_BORE_D} shaft bore, screws on with the M5 bolt")

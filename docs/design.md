@@ -21,7 +21,7 @@ wore out.
 | Tire | TPU 95A | FDM | 2 |
 | Swivel thrust bearing | AXK1024 needle thrust + 2× AS1024 washers | purchased | 1 set |
 | Swivel bushing | Oilite SAE 841, 10×12×15 | purchased | 1 |
-| Retention washer | nylon 6.4×12×1.6 (M6 DIN 125 size) | purchased | 1 |
+| Retention washer | nylon ~6×14×1.5 | purchased | 1 |
 | Retention bolt | existing M5 button head, 19 under head | reuse | 1 |
 
 Everything is parametrised in [`cad/params.py`](../cad/params.py); regenerate
@@ -43,17 +43,21 @@ upper 19 mm of the wheels live inside the recess; the wheels stick out ~30 mm
 below the skin. Measured: land → floor 53.5, so **the wheel top is 3.5 mm
 below the land** and the axle is 28.5 mm down. Consequences:
 
-- Nothing can sit above the wheels. The body is a **16 mm neck** between
-  them (wheel gap 17 − 2 × 0.5) from the swivel back to a rounded boss around
-  the axle.
-- The shaft is 18.1 mm ahead of the axle, and at the shaft axis the wheel only
-  exists between Z ≈ −11 and −46. So a **34 mm wide head** can live in front
-  of the wheels, from the top face down to Z = −20, with its rear sculpted to a
-  cylinder 1.5 mm outside the tire. It ends at X = +4 with a 2 mm thick edge
-  rather than running out to a knife edge. The head is entirely inside the
-  recess (its corners are 23 mm from the axis, the wall is at 47).
-- The head is deliberately deep enough to enclose the whole 15 mm bushing —
-  that's where the tilting moment from the trailing wheels goes.
+- Nothing can sit above the wheels. Everything that spans wider than the
+  **16 mm neck** (wheel gap 17 − 2 × 0.5) has to be in front of the wheel
+  circle or sculpted to it.
+- **Swivel boss**: a Ø26 round about the shaft axis (covers the Ø24 thrust
+  washer), half-round in front, tapering into the neck 3 mm behind the axis.
+  It runs from the top face at Z −4 down to a **flat at Z −21.1**, which
+  encloses the whole 15 mm bushing — that's where the tilting moment from the
+  trailing wheels goes. Where the boss overhangs the wheels (|Y| > 8) it is
+  scooped to a cylinder 1.5 mm outside the tire; those two small "ears" are
+  the minimum needed to back the thrust washer.
+- **Arm**: in side view, a Ø18 round about the axle joined to the boss by two
+  tangent lines — one from the boss rear at Z −12 (nothing above it), one from
+  the flat just behind the retention washer. Nothing sits under the bolt head.
+- The whole body is inside the recess above the skin plane (max 27 mm from
+  the axis; the wall is at 47).
 - **Width is capped by the recess wall.** The farthest point from the swivel
   axis is the outer tread edge where the wheel crosses the skin plane; the
   original (16.63 gap, 11.5 wheels) swings at R 46.86 against a ~47.4 wall.
@@ -62,7 +66,7 @@ below the land** and the axle is 28.5 mm down. Consequences:
   option without shortening the trail.
 
 `generate.py` prints an analytic clearance report (thrust washer ↔ tire, neck
-↔ tire, wheel swing ↔ recess wall, body ↔ floor, counterbore wall). Check it
+↔ tire, wheel swing ↔ recess wall, body and bolt head ↔ floor). Check it
 after every parameter change.
 
 ## Swivel
@@ -86,18 +90,17 @@ no ball bearing with a Ø10 bore fits inside an 18 mm neck anyway (6800 is
 plated-and-chipped, polish it.
 
 **Retention** — the existing **M5 button-head bolt (Ø9.5 head, 19 mm under
-head)** threads into the shaft end and lives in a Ø13 counterbore from below.
-The head is smaller than the shaft, so a **nylon Ø12 × 1.6 washer** (M6 DIN 125
-size, on the M5 bolt) under it is what catches the body: it bears on the
-0.8 mm annulus between the Ø10.4 shaft clearance bore and the Ø13 counterbore.
-The ceiling is placed at `shaft end + washer + 0.3 mm`, so under normal
-rolling nothing touches; when the case is lifted the body hangs on that
-washer. The counterbore leaves a 1.5 mm wall in the neck — thin, but it only
-ever sees the carriage's own weight. The bolt head sits 12 mm up a Ø13 hole;
-a 3 mm hex key on a long shank reaches it.
+head)** threads into the shaft end, and the head sits **exposed under the
+boss's bottom flat**, like the original. The head is smaller than the shaft,
+so a **nylon Ø14 × 1.5 washer** under it is what catches the body: it bears on
+the flat, on the annulus outside the Ø10.4 shaft clearance bore. The flat is
+placed at `shaft end + washer + 0.3 mm`, so under normal rolling nothing
+touches; when the case is lifted the body hangs on that washer. No
+counterbore, so no thin wall, and a 3 mm hex key reaches the bolt from below
+between the wheels (point the key's long arm forward).
 
-Bushing bottom (Z −19) to counterbore ceiling (Z −21.0): 2 mm of solid wall,
-set by the measured 22.92 mm shaft length.
+Bushing bottom (Z −19) to the flat (Z −21.1): 2 mm of solid wall, set by the
+measured 22.92 mm shaft length.
 
 ## Wheel axle — single through-pin
 
@@ -127,7 +130,7 @@ the body and the circlips.
 | Axle bore | Ø8.00 | +0.005 / +0.015 | light slip fit for an 8 h6 pin, Loctite 638 |
 | Axle bore ⟂ to the Y faces of the neck | — | ≤ 0.02 | wheels must run parallel |
 | Neck width | 16.0 | ±0.05 | sets wheel gap |
-| Retention counterbore | Ø13, to the ceiling depth in the STEP | ±0.1 | non-critical; 1.5 mm wall to the neck faces |
+| Boss bottom flat | Z −21.12 from top face = 17.12 | ±0.1 | sets lift float on the retention washer |
 | Shaft clearance bore | Ø10.4 | ±0.1 | must never touch the Ø9.8 shaft |
 | Everything else | as STEP | ±0.1 | — |
 
@@ -211,7 +214,7 @@ races and never drag on the outer race or the hub face.
    is superseded. Re-print.
 2. Print **`carriage_fit_proto.stl`** — one piece: body, the 4 mm thrust stack
    as a solid collar, a plain Ø10.4 bore for the bare shaft, and solid wheels
-   fused on. Screw it onto the case with the existing M5 bolt and a Ø12
+   fused on. Screw it onto the case with the existing M5 bolt and a Ø14
    washer; check the recess ceiling, the 360° swing against the recess wall,
    lift retention, and that the case sits level. Wheels don't turn. Print it
    wheel-face down or upright, supports on; ream the shaft bore if tight.
@@ -222,7 +225,7 @@ races and never drag on the outer race or the hub face.
    only**; a printed body will flex.
 3. Buy: 4× 688-2RS, AXK1024 + 2× AS1024, Oilite 10×12×15, a length of 8 mm
    precision shaft (or an 8 mm dowel pin ≥ 50 long), 2× DIN 471 Ø8 circlips,
-   speed rings, nylon M6 (6.4×12×1.6) washer.
+   speed rings, nylon ~6×14×1.5 washer.
 4. Assemble on the case. Check: wheel ↔ recess ceiling, wheel swing ↔ recess
    wall through 360°, thrust washer ↔ tire, body ↔ tire, swivel free under
    load, lift retention works, case sits level.
@@ -249,8 +252,8 @@ Still open:
       proto that the wheels swing a full 360° without touching the wall; the
       analytic margin is 0.5 mm (sharp-edged tire; the 2 mm tread fillet adds
       ~0.6 mm more).
-- [ ] Is the recess wall vertical, or does it flare? If it flares, there may be
-      room for a wider gap → thicker counterbore wall.
+- [ ] Is the recess wall vertical, or does it flare? (Only matters if we ever
+      want wider wheels.)
 - [ ] Shaft surface: plain steel? chrome? any wear from the old plastic bore?
       Oilite 10 mm ID on a 9.82 shaft is ~0.2 mm loose — acceptable for a swivel,
       but if it feels sloppy, a 3D-printed or bronze 9.9 ID sleeve is the fix.

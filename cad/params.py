@@ -123,42 +123,68 @@ BUSHING_ID, BUSHING_OD = 10.0, 12.0
 BUSHING_L = 15.0           # stock length; pressed flush with body top
 BUSHING_BORE_D = 12.0      # H7 in body -> press fit for the bushing
 
-# --- retention counterbore from below: bolt head + washer live inside -----
+# --- retention: bolt head + washer sit exposed on a flat under the boss ----
 # The Ø9.5 button head is smaller than the shaft, so a washer under it is what
 # actually catches the body when the case is lifted. It bears on the annulus
-# between the shaft clearance bore and its own OD.
-SHAFT_CLEAR_BORE_D = SHAFT_D + 0.4   # between bushing and counterbore; never touches
+# between the shaft clearance bore and its own OD, on the boss's bottom flat.
+# No counterbore: the flat is open below and in front, so the bolt is reached
+# with a 3 mm hex key from underneath, between the wheels.
+SHAFT_CLEAR_BORE_D = SHAFT_D + 0.4   # between bushing and flat; never touches
 PROTO_SHAFT_BORE_D = SHAFT_D + 0.4   # one-piece printed proto: bare shaft in a plain bore (FDM prints undersize; ream if tight)
-RETAIN_WASHER_OD = 12.0    # nylon washer 6.4x12x1.6 (M6 DIN 125) on the M5 bolt
-RETAIN_WASHER_T = 1.6
-RETAIN_CBORE_D = 13.0
+RETAIN_WASHER_OD = 14.0    # nylon washer ~6x14x1.5 on the M5 bolt (any 6-7 mm ID, 14 OD)
+RETAIN_WASHER_T = 1.5
 RETAIN_LIFT_CLEARANCE = 0.3          # axial float when the case is lifted
-assert RETAIN_WASHER_OD > RETAIN_BOLT_HEAD_D and RETAIN_WASHER_OD < RETAIN_CBORE_D
+assert RETAIN_WASHER_OD > RETAIN_BOLT_HEAD_D
 assert RETAIN_WASHER_OD - SHAFT_CLEAR_BORE_D >= 1.2, "washer lift face too narrow"
-# Ceiling of the counterbore = shaft end + washer + clearance
-RETAIN_CEILING_Z = -SHAFT_PROTRUSION + RETAIN_WASHER_T + RETAIN_LIFT_CLEARANCE
-assert RETAIN_CEILING_Z < BODY_TOP_Z - BUSHING_L, \
-    "shaft too short: bushing would run into the retention counterbore"
+# Boss bottom flat = shaft end + washer + clearance
+BOSS_BOTTOM_Z = -SHAFT_PROTRUSION + RETAIN_WASHER_T + RETAIN_LIFT_CLEARANCE   # -21.12
+RETAIN_CEILING_Z = BOSS_BOTTOM_Z     # legacy name used by the fit proto / drawings
+assert BOSS_BOTTOM_Z < BODY_TOP_Z - BUSHING_L, \
+    "shaft too short: bushing would run out of the bottom of the boss"
+BOLT_HEAD_BOTTOM_Z = -SHAFT_PROTRUSION - RETAIN_WASHER_T - RETAIN_BOLT_HEAD_H  # -27.2, exposed
 
 # --- body shape ------------------------------------------------------------
+# Swivel boss: a round about the shaft axis, half-round in front, tapering
+# into the neck behind. Arm: a round about the axle joined to the boss by two
+# tangent lines. Nothing above the arm, nothing under the bolt head.
 NECK_W = WHEEL_GAP - 2 * 0.5         # 16.0: body width between the wheels
-HEAD_W = 34.0                        # wider head in front of the wheels
-HEAD_FRONT_X = -(THRUST_OD / 2 + 4)  # head nose, 4 mm ahead of thrust washer
-HEAD_BOTTOM_Z = -20.0                # head underside; covers the full bushing length
 WHEEL_CLEAR = 1.5                    # radial gap body <-> tire everywhere
-HEAD_REAR_X = 4.0                    # head ends here (avoids a knife edge at the arc)
-LOWER_FRONT_X = -(RETAIN_CBORE_D / 2 + 2.5)   # neck front below the head: covers the cbore wall
-# thickness of the head at its rear edge, on top (arc surface -> top face)
-_arc_z_at_rear = AXLE_Z + math.sqrt((WHEEL_OD / 2 + WHEEL_CLEAR) ** 2 - (HEAD_REAR_X - TRAIL) ** 2)
-HEAD_REAR_THICKNESS = BODY_TOP_Z - _arc_z_at_rear
-assert HEAD_REAR_THICKNESS >= 2.0, "head rear edge too thin; reduce HEAD_REAR_X"
-NECK_REAR_R = 7.0                    # material behind the axle bore
-BODY_BOTTOM_Z = AXLE_Z - NECK_REAR_R # neck bottom
-BODY_EDGE_R = 3.0                    # vertical-edge fillets on the body
-assert BODY_BOTTOM_Z < RETAIN_CEILING_Z, "counterbore would break out of the neck bottom"
-CBORE_WALL = (NECK_W - RETAIN_CBORE_D) / 2
-assert CBORE_WALL >= 1.5, "counterbore wall too thin in the neck"
-assert HEAD_BOTTOM_Z <= BODY_TOP_Z - BUSHING_L, "head should enclose the whole bushing"
+BOSS_R = 13.0                        # covers the Ø24 thrust washer with 1 mm to spare
+assert BOSS_R >= THRUST_OD / 2 + 0.5
+BOSS_TAPER_X = 3.0                   # plan view: boss sides run from (0, ±BOSS_R) to (here, ±NECK_W/2)
+# Where the boss overhangs the wheels (|y| > NECK_W/2) it is scooped to the
+# wheel circle + WHEEL_CLEAR; this is the boss's minimum height over the tire.
+_boss_wing_h = BODY_TOP_Z - (AXLE_Z + math.sqrt((WHEEL_OD / 2 + WHEEL_CLEAR) ** 2 - (BOSS_TAPER_X - TRAIL) ** 2))
+assert _boss_wing_h >= 1.5, "boss wing feathers out over the wheel; reduce BOSS_TAPER_X"
+AXLE_BOSS_R = 9.0                    # Ø18 round about the Ø8 axle bore -> 5 mm wall
+ARM_FRONT_X = RETAIN_WASHER_OD / 2 + 0.5     # arm leaves the flat just behind the washer
+ARM_TOP_Z = -12.0                    # arm leaves the boss rear here (below this: arm; above: nothing)
+BODY_BOTTOM_Z = AXLE_Z - AXLE_BOSS_R # -37.5, bottom of the axle boss
+BODY_EDGE_R = 2.0                    # vertical-edge fillets on the body
+assert ARM_TOP_Z > BOSS_BOTTOM_Z and ARM_TOP_Z < BODY_TOP_Z - 4
+assert BOLT_HEAD_BOTTOM_Z > -LAND_TO_FLOOR + 10, "bolt head too close to the floor"
+
+
+def _tangent_point(px, pz, cx, cz, r, pick):
+    """Tangent point on circle (c, r) from external point p. pick(a, b) -> chosen."""
+    d = math.hypot(px - cx, pz - cz)
+    assert d > r, "point inside the circle"
+    phi = math.atan2(pz - cz, px - cx)
+    alpha = math.acos(r / d)
+    cands = [(cx + r * math.cos(phi + s * alpha), cz + r * math.sin(phi + s * alpha)) for s in (+1, -1)]
+    return pick(*cands)
+
+
+# Side-view arm polygon (X, Z). Closed by the axle circle. Order: front-bottom
+# of the flat -> underside tangent -> axle centre -> top tangent -> boss rear.
+_p_a = (ARM_FRONT_X, BOSS_BOTTOM_Z)
+_p_b = (BOSS_R, ARM_TOP_Z)
+_t_a = _tangent_point(*_p_a, TRAIL, AXLE_Z, AXLE_BOSS_R, lambda a, b: a if a[1] < b[1] else b)   # lower
+_t_b = _tangent_point(*_p_b, TRAIL, AXLE_Z, AXLE_BOSS_R, lambda a, b: a if a[0] > b[0] else b)   # upper/rear
+ARM_PROFILE = [_p_a, _t_a, (TRAIL, AXLE_Z), _t_b, _p_b, (BOSS_R, BOSS_BOTTOM_Z)]
+# the bolt head must stay clear of the arm underside: check at the head's rear edge
+_head_rear_x = RETAIN_BOLT_HEAD_D / 2
+assert _head_rear_x < ARM_FRONT_X, "arm would overlap the bolt head"
 
 # --- wheel axle: single Ø8 ground pin through the body, circlip each end --
 AXLE_PIN_D = AXLE_D                  # 8 h6 precision shaft
@@ -188,9 +214,9 @@ _orig_y_out = ORIG_WHEEL_GAP / 2 + 11.5
 ORIG_SWING_R = math.hypot(_x_rear_at_skin, _orig_y_out)   # what the case was built for
 SWING_MARGIN = RECESS_R - SWING_R
 assert SWING_R <= ORIG_SWING_R + 0.1, "wheels swing wider than the original; recess wall"
-# Body head corners must clear the recess wall by a lot (they're all above the skin)
-_head_r = math.hypot(HEAD_FRONT_X, HEAD_W / 2)
-assert _head_r < RECESS_R - 5, "body head too close to the recess wall"
+# Body (boss + arm) must clear the recess wall by a lot above the skin plane
+_body_r = max(BOSS_R, math.hypot(TRAIL + AXLE_BOSS_R, NECK_W / 2))
+assert _body_r < RECESS_R - 5, "body too close to the recess wall"
 
 # ---------------------------------------------------------------------------
 # Materials (for mass estimates only)

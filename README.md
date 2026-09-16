@@ -31,7 +31,7 @@ uv run cad/preview.py    # docs/cross_section.png (wheel)
 |---|---|
 | `export/body.step`, `hub.step`, `spacer.step`, `axle_pin.step` | to the CNC shop, with the tolerance tables in `docs/design.md` |
 | `export/tire.stl` | print in TPU 95A, on its side, 100 % infill |
-| `export/carriage_fit_proto.stl` | **one-piece printed fit-check**: body + thrust collar + solid wheels; screws straight onto the case with the existing M5 bolt + a Ø12 washer |
+| `export/carriage_fit_proto.stl` | **one-piece printed fit-check**: body + thrust collar + solid wheels; screws straight onto the case with the existing M5 bolt + a Ø14 washer |
 | `export/body_proto.stl`, `hub_proto.stl` | individual printed parts for bearing/bushing fit checks |
 | `export/carriage_assembly.step`, `wheel_assembly.step` | full assemblies with dummy bearings, for viewing |
 
