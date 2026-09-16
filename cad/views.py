@@ -70,14 +70,16 @@ def main() -> None:
     for a in (axes[0, 0], axes[0, 1]):
         xl = a.get_xlim()
         a.axhline(0, color="k", lw=0.8, ls="--")
-        a.axhline(-P.CASE_TO_FLOOR, color="k", lw=0.8)
-        a.text(xl[0], 0.8, "case skin", fontsize=7)
-        a.text(xl[0], -P.CASE_TO_FLOOR + 0.8, "floor", fontsize=7)
+        a.axhline(P.SKIN_Z, color="k", lw=0.8, ls=":")
+        a.axhline(-P.LAND_TO_FLOOR, color="k", lw=0.8)
+        a.text(xl[0], 0.8, "land (recess ceiling)", fontsize=7)
+        a.text(xl[0], P.SKIN_Z + 0.8, "case skin / shaft end", fontsize=7)
+        a.text(xl[0], -P.LAND_TO_FLOOR + 0.8, "floor", fontsize=7)
 
     fig.suptitle(
-        f"Carriage — Ø{P.WHEEL_OD:g} wheels, trail {P.TRAIL:g}, neck {P.NECK_W:g}, "
-        f"overall {P.OVERALL_W:.1f} wide  (assumed: shoulder depth {P.SHOULDER_DEPTH:g}, "
-        f"shaft protrusion {P.SHAFT_PROTRUSION:g})",
+        f"Carriage — Ø{P.WHEEL_OD:g}x{P.HUB_W:g} wheels, trail {P.TRAIL:g}, neck {P.NECK_W:g}, "
+        f"overall {P.OVERALL_W:.1f} wide, shaft {P.SHAFT_PROTRUSION:g} land→end, "
+        f"recess R{P.RECESS_R:.1f} (swing margin {P.SWING_MARGIN:.1f})",
         fontsize=10,
     )
     fig.tight_layout()

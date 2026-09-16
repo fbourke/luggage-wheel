@@ -2,7 +2,7 @@
 
 Replacement dual-wheel spinner carriage for Rimowa-style luggage: CNC
 aluminium body swivelling on the case's Ø10 shaft (needle thrust bearing +
-Oilite bushing), a Ø8 through-axle, two turned aluminium hubs on twin 608
+Oilite bushing), a Ø8 through-axle, two turned aluminium hubs on twin 688
 bearings, and 3D-printed TPU tires. The original wheels ran on plain plastic
 bores and wore out.
 
@@ -38,7 +38,8 @@ STL files are not committed (regenerate them); STEP files are.
 
 ## Status
 
-Geometry is complete against the measured envelope (Ø50 × 19 wheels, 53.5 mm
-case-to-floor, 18.1 trail, 19 wheel gap, Ø10 shaft). Two swivel dimensions are
-still **assumed** — `SHOULDER_DEPTH` and `SHAFT_PROTRUSION` — see the open
-questions in `docs/design.md`.
+Geometry is complete against the fully measured envelope (Ø50 × 11.5 wheels,
+53.5 mm land-to-floor, 18.1 trail, 17 wheel gap, Ø10 shaft 22.92 long inside a
+R 47.4 corner recess, M5 button-head retention). Next step is a printed
+fit-check — the first body proto predates the measurements and is obsolete.
+Remaining open questions are in `docs/design.md`.

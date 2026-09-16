@@ -74,7 +74,7 @@ def make_body() -> Part:
     # --- swivel bore: bushing seat from the top, clearance bore below it,
     #     retention counterbore from the bottom
     body -= _cyl_z(P.BUSHING_BORE_D / 2, top - P.BUSHING_L, top + 1)
-    body -= _cyl_z((P.SHAFT_D + 1.0) / 2, P.RETAIN_CEILING_Z - 1, top - P.BUSHING_L + 1)
+    body -= _cyl_z(P.SHAFT_CLEAR_BORE_D / 2, P.RETAIN_CEILING_Z - 1, top - P.BUSHING_L + 1)
     body -= _cyl_z(P.RETAIN_CBORE_D / 2, bot - 1, P.RETAIN_CEILING_Z)
 
     # --- axle bore through the neck
@@ -114,7 +114,7 @@ def make_thrust_stack() -> Part:
 
 
 def make_shaft() -> Part:
-    return _cyl_z(P.SHAFT_D / 2, -(P.SHOULDER_DEPTH + P.SHAFT_PROTRUSION), 5.0)
+    return _cyl_z(P.SHAFT_D / 2, -P.SHAFT_PROTRUSION, 5.0)
 
 
 # ---------------------------------------------------------------------------
@@ -172,8 +172,12 @@ def clearance_report() -> list[str]:
             best = min(best, d)
     out.append(f"thrust washer -> tire   : {best:5.2f} mm  ({'OK' if best >= 0.8 else 'TIGHT/INTERFERES'})")
 
-    # case skin vs tire top
-    out.append(f"tire top -> case skin   : {P.WHEEL_TOP_GAP:5.2f} mm")
+    # recess ceiling (land) vs tire top
+    out.append(f"tire top -> land        : {P.WHEEL_TOP_GAP:5.2f} mm")
+
+    # recess wall vs wheel swing (at the skin plane, sharp-edged tire)
+    out.append(f"wheel swing -> recess   : {P.SWING_MARGIN:5.2f} mm  "
+               f"(swing R {P.SWING_R:.2f}, original {P.ORIG_SWING_R:.2f}, wall R {P.RECESS_R:.1f})")
 
     # head rear surface is offset WHEEL_CLEAR from the tire by construction
     out.append(f"body head -> tire       : {P.WHEEL_CLEAR:5.2f} mm  (by construction)")
@@ -182,7 +186,8 @@ def clearance_report() -> list[str]:
     out.append(f"neck face -> tire face  : {y_in - P.NECK_W / 2:5.2f} mm")
 
     # floor vs body bottom
-    out.append(f"body bottom -> floor    : {P.BODY_BOTTOM_Z + P.CASE_TO_FLOOR:5.2f} mm")
+    out.append(f"body bottom -> floor    : {P.BODY_BOTTOM_Z + P.LAND_TO_FLOOR:5.2f} mm")
+    out.append(f"body below case skin    : {P.SKIN_Z - P.BODY_BOTTOM_Z:5.2f} mm")
 
     # counterbore wall
     out.append(f"counterbore wall (neck) : {P.CBORE_WALL:5.2f} mm")
