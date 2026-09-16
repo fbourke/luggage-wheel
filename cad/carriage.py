@@ -43,7 +43,10 @@ def _cyl_z(radius: float, z0: float, z1: float, x: float = 0.0) -> Part:
 # ---------------------------------------------------------------------------
 # body
 # ---------------------------------------------------------------------------
-def make_body() -> Part:
+def make_body(fit_proto: bool = False) -> Part:
+    """The machined body. fit_proto=True makes the one-piece printable
+    variant: thrust stack as a solid collar, straight bore for the bare shaft
+    (no bushing), and no axle bore (the wheels get fused on)."""
     top, bot = P.BODY_TOP_Z, P.BODY_BOTTOM_Z
     ax, az, R = P.TRAIL, P.AXLE_Z, P.NECK_REAR_R
     x0 = P.HEAD_FRONT_X
@@ -71,6 +74,12 @@ def make_body() -> Part:
     except Exception as exc:  # pragma: no cover
         print(f"  ! body edge fillet failed ({exc}); continuing unfilleted")
 
+    if fit_proto:
+        body += _cyl_z(P.THRUST_OD / 2, top, 0.0)                 # thrust stack as a collar
+        body -= _cyl_z(P.PROTO_SHAFT_BORE_D / 2, P.RETAIN_CEILING_Z - 1, 1.0)
+        body -= _cyl_z(P.RETAIN_CBORE_D / 2, bot - 1, P.RETAIN_CEILING_Z)
+        return body
+
     # --- swivel bore: bushing seat from the top, clearance bore below it,
     #     retention counterbore from the bottom
     body -= _cyl_z(P.BUSHING_BORE_D / 2, top - P.BUSHING_L, top + 1)
@@ -80,6 +89,21 @@ def make_body() -> Part:
     # --- axle bore through the neck
     body -= _cyl_y(P.AXLE_PIN_D / 2, P.NECK_W + 2, ax, az)
     return body
+
+
+def make_fit_proto() -> Part:
+    """One-piece printable fit check: body + thrust collar + solid wheels on a
+    fused axle. Screws straight onto the case with the real M5 bolt + washer.
+    Wheels don't turn; the point is the recess, the swing, and the retention."""
+    proto = make_body(fit_proto=True)
+    axle_l = 2 * (P.WHEEL_CENTRE_Y + P.HUB_W / 2)
+    proto += _cyl_y(P.AXLE_PIN_D / 2, axle_l, P.TRAIL, P.AXLE_Z)
+    tire = W.make_tire(installed=True)
+    for side in (+1, -1):
+        loc = wheel_location(side)
+        proto += Cylinder(P.FLANGE_D / 2, P.HUB_W).moved(loc)   # solid hub
+        proto += tire.moved(loc)
+    return proto
 
 
 # ---------------------------------------------------------------------------

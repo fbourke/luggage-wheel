@@ -55,6 +55,8 @@ def main() -> None:
     step(body, "body"); step(pin, "axle_pin")
     stl(body, "body_proto")
     step(C.make_assembly(), "carriage_assembly")
+    proto = C.make_fit_proto()
+    step(proto, "carriage_fit_proto"); stl(proto, "carriage_fit_proto")
 
     # ---- report ------------------------------------------------------------
     print(f"bearing       : {P.BEARING}  {P.BRG_ID}x{P.BRG_OD}x{P.BRG_W}  x{P.BEARINGS_PER_WHEEL} per wheel")
@@ -68,6 +70,8 @@ def main() -> None:
     print(f"swivel        : AXK1024 thrust + Oilite {P.BUSHING_ID:g}x{P.BUSHING_OD:g}x{P.BUSHING_L:g} bushing, "
           f"{P.RETAIN_BOLT} retention bolt in Ø{P.RETAIN_CBORE_D} cbore")
     print(f"overall width : {P.OVERALL_W:.1f} mm  (wheel centres ±{P.WHEEL_CENTRE_Y:.2f})")
+    print(f"fit proto     : one piece, {W.mass_g(proto, 'PLA'):.0f} g PLA / {W.mass_g(proto, 'PLA') * 1.27 / 1.24:.0f} g PETG, "
+          f"Ø{P.PROTO_SHAFT_BORE_D} shaft bore, screws on with the M5 bolt")
     print("clearances:")
     for line in C.clearance_report():
         print("   " + line)

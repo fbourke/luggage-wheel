@@ -33,6 +33,7 @@ Services: PCBWay / JLCCNC / Xometry / Protolabs, or a local shop. Ask for one qu
 |---|---|---|---|---|---|
 | 14 | Tire | `export/tire.stl` | TPU 95A, ~12 g, print on its side, 100 % infill | 2 | 8 |
 | 15 | Circlip cap (optional, TBD) | — | any | 2 | 8 |
+| — | One-piece fit proto | `export/carriage_fit_proto.stl` | PETG or PLA, ~80 g, supports on | 1 | — |
 | — | Body proto | `export/body_proto.stl` | PETG, 100 % infill | 1 | — |
 | — | Hub proto | `export/hub_proto.stl` | PLA | 2 | — |
 

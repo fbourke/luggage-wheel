@@ -128,6 +128,7 @@ BUSHING_BORE_D = 12.0      # H7 in body -> press fit for the bushing
 # actually catches the body when the case is lifted. It bears on the annulus
 # between the shaft clearance bore and its own OD.
 SHAFT_CLEAR_BORE_D = SHAFT_D + 0.4   # between bushing and counterbore; never touches
+PROTO_SHAFT_BORE_D = SHAFT_D + 0.4   # one-piece printed proto: bare shaft in a plain bore (FDM prints undersize; ream if tight)
 RETAIN_WASHER_OD = 12.0    # nylon washer 6.4x12x1.6 (M6 DIN 125) on the M5 bolt
 RETAIN_WASHER_T = 1.6
 RETAIN_CBORE_D = 13.0

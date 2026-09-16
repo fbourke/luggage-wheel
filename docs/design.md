@@ -209,10 +209,17 @@ races and never drag on the outer race or the hub face.
 1. ~~Measure the open questions~~ — done 2026-09-15; the first PETG body proto
    was printed against the *assumed* envelope (19 mm neck, Ø15 counterbore) and
    is superseded. Re-print.
-2. Print `body_proto.stl` (PETG, 100 % infill), `hub_proto.stl` ×2 (PLA),
-   `tire.stl` ×2 (TPU). FDM bores come out undersize — ream/scrape the Ø16 bores
-   until a 688 pushes in by hand and the Ø8/Ø12 bores to a slip fit. This is a
-   **fit and envelope check only**; a printed body will flex.
+2. Print **`carriage_fit_proto.stl`** — one piece: body, the 4 mm thrust stack
+   as a solid collar, a plain Ø10.4 bore for the bare shaft, and solid wheels
+   fused on. Screw it onto the case with the existing M5 bolt and a Ø12
+   washer; check the recess ceiling, the 360° swing against the recess wall,
+   lift retention, and that the case sits level. Wheels don't turn. Print it
+   wheel-face down or upright, supports on; ream the shaft bore if tight.
+   Then `body_proto.stl` (PETG, 100 % infill), `hub_proto.stl` ×2 (PLA),
+   `tire.stl` ×2 (TPU) for the bearing/bushing/tire fits. FDM bores come out
+   undersize — ream/scrape the Ø16 bores until a 688 pushes in by hand and the
+   Ø8/Ø12 bores to a slip fit. All of this is a **fit and envelope check
+   only**; a printed body will flex.
 3. Buy: 4× 688-2RS, AXK1024 + 2× AS1024, Oilite 10×12×15, a length of 8 mm
    precision shaft (or an 8 mm dowel pin ≥ 50 long), 2× DIN 471 Ø8 circlips,
    speed rings, nylon M6 (6.4×12×1.6) washer.
