@@ -81,9 +81,28 @@ This is a new body (~a day of CAD) and a different look; it buys real
 skate-grade urethane and bearings you can get anywhere. Parked unless you
 want it.
 
-## Premium thread (Hinomoto / Rimowa Essential / Japanese market)
+## Premium thread — unresolved leads
 
-<!-- filled in from the sourcing researcher's report -->
+Not run to ground: every search engine we could reach ended up captcha- or
+rate-walled partway through the evening. What we know and what's worth ten
+minutes of manual searching:
+
+- **Hinomoto** (Japan) is the OEM behind Rimowa Essential, Tumi, Proteca,
+  Monos and others, and the only luggage-wheel brand people ask for by name.
+  Everything we saw is sold as complete *caster units* to brands; the Amazon
+  "Hinomoto" search results are generic look-alikes. Worth trying: Amazon JP /
+  Rakuten for `スーツケース 交換 車輪 50mm ベアリング` (suitcase replacement
+  wheel 50 mm bearing) — the Japanese-market kits tend to be a grade above the
+  US Amazon ones, same format. Also Hinomoto's own site for a parts list.
+- **Rimowa Essential** (post-LVMH) dual wheels: Reddit threads say they differ
+  from the older 47 mm wheels, but nobody quotes dimensions. If a repair shop
+  sells them bare they would be the premium version of #1; expect ~$15–25 each.
+- **PU-coated bearing rollers**: industrial guide rollers exist as a bearing
+  (688 / 6000 / 6001) overmoulded with a PU tyre, typically Ø30–60 × 10–16.
+  A Ø50 × 12 on a 688 or 6000 would be a near-ideal wheel — steel hub, real
+  bearing, moulded PU — and would justify a dedicated axle. Search
+  AliExpress/Misumi for "PU coated bearing 50mm", "polyurethane roller
+  bearing 8x50x12", "6000 PU wheel 50mm". Unverified.
 
 ## Dead ends
 
