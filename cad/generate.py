@@ -79,7 +79,7 @@ def main() -> None:
           f"bottom Z={P.BODY_BOTTOM_Z}   {W.mass_g(body, 'Al6061'):.1f} g Al")
     print(f"axle pin      : Ø{P.AXLE_PIN_D:g} x {P.AXLE_PIN_L:.1f}, DIN 471 grooves Ø{P.CIRCLIP_GROOVE_D:g}x{P.CIRCLIP_GROOVE_W:g} at ±{P.AXLE_GROOVE_Y:.2f}; trail {P.TRAIL:g}")
     print(f"swivel        : AXK1024 thrust + Oilite {P.BUSHING_ID:g}x{P.BUSHING_OD:g}x{P.BUSHING_L:g} bushing, "
-          f"{P.RETAIN_BOLT} retention bolt + Ø{P.RETAIN_WASHER_OD:g} washer on the flat at Z={P.BOSS_BOTTOM_Z:.2f}")
+          f"{P.RETAIN_BOLT} retention bolt bearing on the closed-bore flat at Z={P.BOSS_BOTTOM_Z:.2f}")
     print(f"overall width : {P.OVERALL_W:.1f} mm  (wheel centres ±{P.WHEEL_CENTRE_Y:.2f})")
     print(f"fit proto     : one piece, {W.mass_g(proto, 'PLA'):.0f} g PLA / {W.mass_g(proto, 'PLA') * 1.27 / 1.24:.0f} g PETG, "
           f"Ø{P.PROTO_SHAFT_BORE_D} shaft bore, screws on with the M5 bolt")

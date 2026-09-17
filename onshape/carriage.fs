@@ -8,6 +8,8 @@ import(path : "onshape/std/common.fs", version : "3070.0");
  * Frame: X fore/aft (+X toward the wheels), Y across the case, Z up.
  * Z = 0 is the LAND (recess ceiling the thrust stack bears on); the case skin
  * is at Z = -shaftProtrusion; the floor is at Z = -landToFloor.
+ * Retention is OEM-style: the shaft bore closes to a step just below the
+ * shaft end and the M5 button head bears on the boss's bottom flat (no washer).
  */
 
 annotation { "Feature Type Name" : "Luggage carriage" }
@@ -56,8 +58,12 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.bushingL, { (millimeter) : [5, 15, 25] } as LengthBoundSpec);
             annotation { "Name" : "Shaft clearance bore diameter" }
             isLength(definition.shaftClearD, { (millimeter) : [6, 10.4, 20] } as LengthBoundSpec);
-            annotation { "Name" : "Retention washer thickness + lift float" }
-            isLength(definition.retainStack, { (millimeter) : [0.5, 1.8, 5] } as LengthBoundSpec);
+            annotation { "Name" : "Shaft end float above the step" }
+            isLength(definition.liftFloat, { (millimeter) : [0.1, 0.3, 2] } as LengthBoundSpec);
+            annotation { "Name" : "Step thickness under the shaft end" }
+            isLength(definition.stepT, { (millimeter) : [1, 2, 5] } as LengthBoundSpec);
+            annotation { "Name" : "Bolt shank hole diameter" }
+            isLength(definition.boltHoleD, { (millimeter) : [3, 5.5, 9] } as LengthBoundSpec);
         }
         annotation { "Group Name" : "Arm", "Collapsed By Default" : true }
         {
@@ -66,7 +72,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             annotation { "Name" : "Axle bore diameter" }
             isLength(definition.axleD, { (millimeter) : [3, 6, 12] } as LengthBoundSpec);
             annotation { "Name" : "Arm leaves flat at X" }
-            isLength(definition.armFrontX, { (millimeter) : [3, 7.5, 15] } as LengthBoundSpec);
+            isLength(definition.armFrontX, { (millimeter) : [3, 6, 15] } as LengthBoundSpec);
             annotation { "Name" : "Arm leaves boss rear at Z (depth below land)" }
             isLength(definition.armTopDepth, { (millimeter) : [5, 12, 20] } as LengthBoundSpec);
             annotation { "Name" : "Vertical edge fillet" }
@@ -78,7 +84,8 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         const r = definition.wheelOD / 2;
         const axleZ = -(definition.landToFloor - r);
         const top = -definition.thrustH;                                   // body top face
-        const flat = -definition.shaftProtrusion + definition.retainStack; // boss bottom flat
+        const stepZ = -definition.shaftProtrusion + definition.liftFloat;  // step ceiling: shaft end floats above it
+        const flat = stepZ - definition.stepT;                              // boss bottom flat; bolt head bears here
         const armTop = -definition.armTopDepth;
         const neckW = definition.wheelGap - 1 * millimeter;
         const hw = neckW / 2;
@@ -87,8 +94,10 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         const aR = definition.axleBossR;
         const wheelCentreY = hw + definition.inboardT + definition.wheelW / 2;
 
-        if (flat >= top - definition.bushingL)
-            throw regenError("Shaft too short: bushing would run out of the boss flat.");
+        if (stepZ >= top - definition.bushingL)
+            throw regenError("Shaft too short: bushing would run into the step.");
+        if ((definition.shaftClearD - definition.boltHoleD) / 2 < 1.5 * millimeter)
+            throw regenError("Bolt hole too large: the step annulus under the shaft end is too narrow.");
         if (armTop <= flat || armTop >= top - 4 * millimeter)
             throw regenError("Arm top must lie between the boss flat and 4 mm below the top face.");
 
@@ -173,8 +182,13 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         });
         fCylinder(context, id + "clearBore", {
             "topCenter" : vector(0 * millimeter, 0 * millimeter, top - definition.bushingL + 1 * millimeter),
-            "bottomCenter" : vector(0 * millimeter, 0 * millimeter, flat - 1 * millimeter),
+            "bottomCenter" : vector(0 * millimeter, 0 * millimeter, stepZ),
             "radius" : definition.shaftClearD / 2
+        });
+        fCylinder(context, id + "boltHole", {
+            "topCenter" : vector(0 * millimeter, 0 * millimeter, stepZ + 1 * millimeter),
+            "bottomCenter" : vector(0 * millimeter, 0 * millimeter, flat - 1 * millimeter),
+            "radius" : definition.boltHoleD / 2
         });
         fCylinder(context, id + "axleBore", {
             "topCenter" : vector(trail, hw + 1 * millimeter, axleZ),
@@ -182,7 +196,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "radius" : definition.axleD / 2
         });
         opBoolean(context, id + "cutBores", {
-            "tools" : qUnion([qCreatedBy(id + "bushingBore", EntityType.BODY), qCreatedBy(id + "clearBore", EntityType.BODY), qCreatedBy(id + "axleBore", EntityType.BODY)]),
+            "tools" : qUnion([qCreatedBy(id + "bushingBore", EntityType.BODY), qCreatedBy(id + "clearBore", EntityType.BODY), qCreatedBy(id + "boltHole", EntityType.BODY), qCreatedBy(id + "axleBore", EntityType.BODY)]),
             "targets" : body,
             "operationType" : BooleanOperationType.SUBTRACTION
         });
@@ -234,8 +248,8 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         treadW : 12 * millimeter, wheelW : 13.7 * millimeter, bossD : 20 * millimeter, wheelGap : 17 * millimeter,
         inboardT : 1 * millimeter, wheelClear : 1.5 * millimeter, showWheels : true,
         thrustH : 4 * millimeter, bossR : 13 * millimeter, bossTaperX : 2 * millimeter, bushingBoreD : 12 * millimeter,
-        bushingL : 15 * millimeter, shaftClearD : 10.4 * millimeter, retainStack : 1.8 * millimeter,
-        axleBossR : 9 * millimeter, axleD : 6 * millimeter, armFrontX : 7.5 * millimeter, armTopDepth : 12 * millimeter,
+        bushingL : 15 * millimeter, shaftClearD : 10.4 * millimeter, liftFloat : 0.3 * millimeter, stepT : 2 * millimeter, boltHoleD : 5.5 * millimeter,
+        axleBossR : 9 * millimeter, axleD : 6 * millimeter, armFrontX : 6 * millimeter, armTopDepth : 12 * millimeter,
         edgeR : 2 * millimeter
     });
 

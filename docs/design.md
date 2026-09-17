@@ -35,8 +35,7 @@ the "Wheel" chapter is the machined variant.
 | Outboard ring | steel 6×10×0.5 washer | purchased | 2 |
 | Swivel thrust bearing | AXK1024 needle thrust + 2× AS1024 washers | purchased | 1 set |
 | Swivel bushing | Oilite SAE 841, 10×12×15 | purchased | 1 |
-| Retention washer | nylon ~6×14×1.5 | purchased | 1 |
-| Retention bolt | existing M5 button head, 19 under head | reuse | 1 |
+| Retention bolt | existing M5 button head, 19 under head — bears directly on the body | reuse | 1 |
 
 For `machined` swap the wheel rows for: Ø8 axle pin 46.4 long, DIN 471 Ø8
 circlips, 2× Al hub, 4× 688-2RS, 2× Al spacer ring, 4× 8×12×0.5 speed rings,
@@ -67,14 +66,14 @@ below the land** and the axle is 28.5 mm down. Consequences:
   circle or sculpted to it.
 - **Swivel boss**: a Ø26 round about the shaft axis (covers the Ø24 thrust
   washer), half-round in front, tapering into the neck 3 mm behind the axis.
-  It runs from the top face at Z −4 down to a **flat at Z −21.1**, which
-  encloses the whole 15 mm bushing — that's where the tilting moment from the
-  trailing wheels goes. Where the boss overhangs the wheels (|Y| > 8) it is
+  It runs from the top face at Z −4 down to a **flat at Z −24.6**, enclosing
+  the whole 15 mm bushing (where the tilting moment from the trailing wheels
+  goes) and the shaft end. Where the boss overhangs the wheels (|Y| > 8) it is
   scooped to a cylinder 1.5 mm outside the tire; those two small "ears" are
   the minimum needed to back the thrust washer.
 - **Arm**: in side view, a Ø18 round about the axle joined to the boss by two
   tangent lines — one from the boss rear at Z −12 (nothing above it), one from
-  the flat just behind the retention washer. Nothing sits under the bolt head.
+  the flat just behind the bolt head. Nothing sits under the bolt head.
 - The whole body is inside the recess above the skin plane (max 27 mm from
   the axis; the wall is at 47).
 - **Width is capped by the recess wall.** The farthest point from the swivel
@@ -110,18 +109,21 @@ no ball bearing with a Ø10 bore fits inside an 18 mm neck anyway (6800 is
 Ø19 OD). Shaft finish matters more than the bushing: if the shaft is rough or
 plated-and-chipped, polish it.
 
-**Retention** — the existing **M5 button-head bolt (Ø9.5 head, 19 mm under
-head)** threads into the shaft end, and the head sits **exposed under the
-boss's bottom flat**, like the original. The head is smaller than the shaft,
-so a **nylon Ø14 × 1.5 washer** under it is what catches the body: it bears on
-the flat, on the annulus outside the Ø10.4 shaft clearance bore. The flat is
-placed at `shaft end + washer + 0.3 mm`, so under normal rolling nothing
-touches; when the case is lifted the body hangs on that washer. No
-counterbore, so no thin wall, and a 3 mm hex key reaches the bolt from below
-between the wheels (point the key's long arm forward).
+**Retention** — OEM style, closed bore. The Ø10.4 shaft clearance bore stops
+at an internal **step 0.3 mm below the shaft end** (Z −22.62); a **Ø5.5 hole**
+for the bolt shank continues through a **2 mm step** to the boss's bottom flat
+(Z −24.62). The existing **M5 button-head bolt (Ø9.5 head, 19 mm under head)**
+threads into the shaft end with its head bearing directly on the flat. Under
+normal rolling nothing touches (the 0.3 float); lift the case and the bolt
+head pulls the body up by the step. No washer, and the shaft end is captured
+inside the body. A 3 mm hex key reaches the bolt from below between the
+wheels (point the key's long arm forward).
 
-Bushing bottom (Z −19) to the flat (Z −21.1): 2 mm of solid wall, set by the
-measured 22.92 mm shaft length.
+Why not a plain flat with a washer (the previous revision): it worked on the
+printed proto — the shaft sat 1.8 mm proud, by design — but the closed bore is
+one part fewer, stiffer around the shaft end, and matches what the OEM did.
+
+Bushing bottom (Z −19) to the step (Z −22.62): 3.6 mm of clearance bore.
 
 ## Wheel axle — single through-pin
 
@@ -158,7 +160,9 @@ the body and the circlips.
 | Axle bore | Ø6.00 (`ots`) / Ø8.00 (`machined`) | +0.005 / +0.015 | light slip fit for an h6 pin, Loctite 638 |
 | Axle bore ⟂ to the Y faces of the neck | — | ≤ 0.02 | wheels must run parallel |
 | Neck width | 16.0 | ±0.05 | sets wheel gap |
-| Boss bottom flat | Z −21.12 from top face = 17.12 | ±0.1 | sets lift float on the retention washer |
+| Step ceiling (bottom of Ø10.4 bore) | 18.62 below the top face | **±0.05** | sets the 0.3 shaft-end float; too shallow and the shaft bottoms, lifting the thrust stack |
+| Boss bottom flat | 20.62 below the top face | ±0.1 | bolt head seat |
+| Bolt hole | Ø5.5 through the step | ±0.1 | M5 shank clearance |
 | Shaft clearance bore | Ø10.4 | ±0.1 | must never touch the Ø9.8 shaft |
 | Everything else | as STEP | ±0.1 | — |
 
@@ -256,7 +260,7 @@ races and never drag on the outer race or the hub face.
    thrust-washer gaps in the flesh.
 5. Buy the rest: AXK1024 + 2× AS1024, Oilite 10×12×15, Ø6 h6 precision shaft
    (or a 6 mm dowel pin ≥ 55 long), 2× DIN 471 Ø6 circlips, 6×10×0.5
-   washers, nylon ~6×14×1.5 washer.
+   washers — or just use the wheel kit's axle + screw, which fit.
 6. Assemble on the case. Check: wheel ↔ recess ceiling, swing through 360°,
    thrust washer ↔ tire, body ↔ tire, swivel free under load, lift retention,
    case level.

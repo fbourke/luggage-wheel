@@ -38,7 +38,7 @@ uv run cad/preview.py                         # docs/cross_section.png (machined
 |---|---|
 | `export/body.step`, `axle_pin.step`, `ots_spacer.step` | to the CNC shop, with the tolerance tables in `docs/design.md` |
 | `export/ots_wheel_ref.step` | dummy of the bought wheel, for reference |
-| `export/carriage_fit_proto.stl` | **one-piece printed fit-check**: body + thrust collar + solid wheels; screws straight onto the case with the existing M5 bolt + a Ø14 washer |
+| `export/carriage_fit_proto.stl` | **one-piece printed fit-check**: body + thrust collar + solid wheels; screws straight onto the case with the existing M5 bolt |
 | `export/body_proto.stl` | printed body for bushing/axle fit checks |
 | `export/carriage_assembly.step` | full assembly with dummy wheels, for viewing |
 | `export/machined/…` | the same set for the machined-wheel variant, plus `hub.step`, `spacer.step`, `tire.step`/`.stl`, `wheel_assembly.step` |

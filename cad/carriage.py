@@ -94,12 +94,14 @@ def make_body(fit_proto: bool = False) -> Part:
 
     if fit_proto:
         body += _cyl_z(P.THRUST_OD / 2, top, 0.0)                 # thrust stack as a collar
-        body -= _cyl_z(P.PROTO_SHAFT_BORE_D / 2, flat - 1, 1.0)
+        body -= _cyl_z(P.PROTO_SHAFT_BORE_D / 2, P.STEP_CEILING_Z, 1.0)
+        body -= _cyl_z(P.BOLT_HOLE_D / 2, flat - 1, P.STEP_CEILING_Z + 1)
         return body
 
     # --- swivel bore: bushing seat from the top, clearance bore down to the flat
     body -= _cyl_z(P.BUSHING_BORE_D / 2, top - P.BUSHING_L, top + 1)
-    body -= _cyl_z(P.SHAFT_CLEAR_BORE_D / 2, flat - 1, top - P.BUSHING_L + 1)
+    body -= _cyl_z(P.SHAFT_CLEAR_BORE_D / 2, P.STEP_CEILING_Z, top - P.BUSHING_L + 1)
+    body -= _cyl_z(P.BOLT_HOLE_D / 2, flat - 1, P.STEP_CEILING_Z + 1)      # bolt shank through the step
 
     # --- axle bore through the arm
     body -= _cyl_y(P.AXLE_PIN_D / 2, P.NECK_W + 2, ax, az)
@@ -243,6 +245,7 @@ def clearance_report() -> list[str]:
     # floor vs body bottom and bolt head
     out.append(f"body bottom -> floor    : {P.BODY_BOTTOM_Z + P.LAND_TO_FLOOR:5.2f} mm")
     out.append(f"bolt head -> floor      : {P.BOLT_HEAD_BOTTOM_Z + P.LAND_TO_FLOOR:5.2f} mm  (exposed under the flat)")
+    out.append(f"shaft end -> step       : {P.RETAIN_LIFT_CLEARANCE:5.2f} mm float; step {P.STEP_T:g} thick, Ø{P.BOLT_HOLE_D:g} bolt hole")
     out.append(f"body below case skin    : {P.SKIN_Z - P.BODY_BOTTOM_Z:5.2f} mm")
 
     # bushing wall at the neck sides

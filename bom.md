@@ -24,8 +24,7 @@ Services: PCBWay / JLCCNC / Xometry / Protolabs, or a local shop. One quote for 
 | 8 | Thrust bearing | **AXK1024** needle roller thrust, 10×24×2 | 1 | 4 | bearing supplier / Amazon / AliExpress | $8–12 |
 | 9 | Thrust washers | **AS1024** hardened, 10×24×1 | 2 | 8 | same, often bundled with AXK1024 | $5–8 |
 | 10 | Swivel bushing | **Oilite SAE 841 sleeve, 10 ID × 12 OD × 15 L** | 1 | 4 | McMaster 6391K-series / bearing supplier | $6–10 |
-| 11 | Retention washer | nylon (or PTFE) ~6 ID × 14 OD × 1.5, fits over the M5 bolt; the OD is what matters | 1 | 4 | hardware / Amazon assortment | $2 |
-| 12 | Retention bolt | existing — reuse. If replacing: M5×0.8 button head (ISO 7380) × 20, + blue Loctite | 1 | 4 | — | $0 |
+| 12 | Retention bolt | existing — reuse; head bears directly on the body (closed bore, no washer). If replacing: M5×0.8 button head (ISO 7380) × 20, + blue Loctite | 1 | 4 | — | $0 |
 | 13 | Retaining compound | Loctite 638 (axle pin in body) | — | 1 tube | — | $10 |
 
 ## Printed

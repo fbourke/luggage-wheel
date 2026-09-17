@@ -159,25 +159,26 @@ BUSHING_ID, BUSHING_OD = 10.0, 12.0
 BUSHING_L = 15.0           # stock length; pressed flush with body top
 BUSHING_BORE_D = 12.0      # H7 in body -> press fit for the bushing
 
-# --- retention: bolt head + washer sit exposed on a flat under the boss ----
-# The Ø9.5 button head is smaller than the shaft, so a washer under it is what
-# actually catches the body when the case is lifted. It bears on the annulus
-# between the shaft clearance bore and its own OD, on the boss's bottom flat.
-# No counterbore: the flat is open below and in front, so the bolt is reached
-# with a 3 mm hex key from underneath, between the wheels.
-SHAFT_CLEAR_BORE_D = SHAFT_D + 0.4   # between bushing and flat; never touches
+# --- retention: closed bore, OEM style -----------------------------------
+# The shaft clearance bore stops at an internal STEP just below the shaft end;
+# only a bolt-shank hole continues through to the boss's bottom flat. The M5
+# button head bears directly on that flat, so lifting the case pulls the bolt
+# head against the body — no washer, and the shaft end is captured inside the
+# body. The flat is open below and in front, so the bolt is reached with a
+# 3 mm hex key from underneath, between the wheels.
+SHAFT_CLEAR_BORE_D = SHAFT_D + 0.4   # between bushing and step; never touches the shaft
 PROTO_SHAFT_BORE_D = SHAFT_D + 0.4   # one-piece printed proto: bare shaft in a plain bore (FDM prints undersize; ream if tight)
-RETAIN_WASHER_OD = 14.0    # nylon washer ~6x14x1.5 on the M5 bolt (any 6-7 mm ID, 14 OD)
-RETAIN_WASHER_T = 1.5
-RETAIN_LIFT_CLEARANCE = 0.3          # axial float when the case is lifted
-assert RETAIN_WASHER_OD > RETAIN_BOLT_HEAD_D
-assert RETAIN_WASHER_OD - SHAFT_CLEAR_BORE_D >= 1.2, "washer lift face too narrow"
-# Boss bottom flat = shaft end + washer + clearance
-BOSS_BOTTOM_Z = -SHAFT_PROTRUSION + RETAIN_WASHER_T + RETAIN_LIFT_CLEARANCE   # -21.12
-RETAIN_CEILING_Z = BOSS_BOTTOM_Z     # legacy name used by the fit proto / drawings
-assert BOSS_BOTTOM_Z < BODY_TOP_Z - BUSHING_L, \
-    "shaft too short: bushing would run out of the bottom of the boss"
-BOLT_HEAD_BOTTOM_Z = -SHAFT_PROTRUSION - RETAIN_WASHER_T - RETAIN_BOLT_HEAD_H  # -27.2, exposed
+RETAIN_LIFT_CLEARANCE = 0.3          # axial float: shaft end -> step ceiling, when the case is lifted
+STEP_T = 2.0                         # solid aluminium under the shaft end (carries only the carriage's own weight)
+BOLT_HOLE_D = 5.5                    # M5 shank clearance through the step
+STEP_CEILING_Z = -SHAFT_PROTRUSION + RETAIN_LIFT_CLEARANCE   # -22.62: shaft end floats 0.3 above this
+BOSS_BOTTOM_Z = STEP_CEILING_Z - STEP_T                        # -24.62: boss bottom flat, bolt head bears here
+RETAIN_CEILING_Z = STEP_CEILING_Z    # legacy name
+assert (SHAFT_CLEAR_BORE_D - BOLT_HOLE_D) / 2 >= 2.0, "step annulus too narrow to carry the bolt head"
+assert RETAIN_BOLT_HEAD_D > BOLT_HOLE_D + 2.0, "bolt head must overlap the step by >= 1 mm all round"
+assert STEP_CEILING_Z < BODY_TOP_Z - BUSHING_L, \
+    "shaft too short: bushing would run into the step"
+BOLT_HEAD_BOTTOM_Z = BOSS_BOTTOM_Z - RETAIN_BOLT_HEAD_H        # -27.37, exposed
 
 # --- body shape ------------------------------------------------------------
 # Swivel boss: a round about the shaft axis, half-round in front, tapering
@@ -193,7 +194,7 @@ BOSS_TAPER_X = 2.0                   # plan view: boss sides run from (0, ±BOSS
 _boss_wing_h = BODY_TOP_Z - (AXLE_Z + math.sqrt((WHEEL_OD / 2 + WHEEL_CLEAR) ** 2 - (BOSS_TAPER_X - TRAIL) ** 2))
 assert _boss_wing_h >= 1.5, "boss wing feathers out over the wheel; reduce BOSS_TAPER_X"
 AXLE_BOSS_R = 9.0                    # Ø18 round about the Ø8 axle bore -> 5 mm wall
-ARM_FRONT_X = RETAIN_WASHER_OD / 2 + 0.5     # arm leaves the flat just behind the washer
+ARM_FRONT_X = RETAIN_BOLT_HEAD_D / 2 + 1.25  # 6.0: arm leaves the flat just behind the bolt head
 ARM_TOP_Z = -12.0                    # arm leaves the boss rear here (below this: arm; above: nothing)
 BODY_BOTTOM_Z = AXLE_Z - AXLE_BOSS_R # -37.5, bottom of the axle boss
 BODY_EDGE_R = 2.0                    # vertical-edge fillets on the body
