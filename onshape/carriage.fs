@@ -102,27 +102,35 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             throw regenError("Arm top must lie between the boss flat and 4 mm below the top face.");
 
         // ---- neck: side profile on the XZ plane, extruded symmetric in Y ------
-        // boss rectangle
-        var sk = newSketchOnPlane(context, id + "neckSketch", { "sketchPlane" : plane(vector(0, 0, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)) });
-        // sketch plane: origin at world origin, normal -Y, x-axis = world X  -> sketch y = world Z
+        // Three separate sketches + extrudes, then a solid union. (One sketch
+        // with all three shapes drops the small circle/rectangle lens because
+        // the arm polygon shares edges with the rectangle.)
+        const sidePlane = plane(vector(0, 0, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)); // sketch (x,y) = world (X,Z)
+        var sk = newSketchOnPlane(context, id + "neckSketch", { "sketchPlane" : sidePlane });
         skRectangle(sk, "bossRect", { "firstCorner" : vector(-bossR, flat), "secondCorner" : vector(bossR, top) });
-        // arm polygon: tangent lines from the flat and the boss rear to the axle circle
+        skSolve(sk);
         const pA = vector(definition.armFrontX, flat);
         const pB = vector(bossR, armTop);
         const c = vector(trail, axleZ);
         const tA = tangentPoint(pA, c, aR, false);   // lower tangent
         const tB = tangentPoint(pB, c, aR, true);    // upper/rear tangent
-        skPolyline(sk, "armPoly", { "points" : [pA, tA, c, tB, pB, vector(bossR, flat), pA] });
-        skCircle(sk, "axleBoss", { "center" : c, "radius" : aR });
-        skSolve(sk);
-        opExtrude(context, id + "neck", {
-            "entities" : qSketchRegion(id + "neckSketch", true),
-            "direction" : vector(0, 1, 0),
-            "endBound" : BoundingType.BLIND,
-            "endDepth" : hw,
-            "startBound" : BoundingType.BLIND,
-            "startDepth" : hw
-        });
+        var ask = newSketchOnPlane(context, id + "armSketch", { "sketchPlane" : sidePlane });
+        skPolyline(ask, "armPoly", { "points" : [pA, tA, c, tB, pB, vector(bossR, flat), pA] });
+        skSolve(ask);
+        var csk = newSketchOnPlane(context, id + "axleSketch", { "sketchPlane" : sidePlane });
+        skCircle(csk, "axleBoss", { "center" : c, "radius" : aR });
+        skSolve(csk);
+        for (var part in [["neck", "neckSketch"], ["arm", "armSketch"], ["axleBoss", "axleSketch"]])
+        {
+            opExtrude(context, id + part[0], {
+                "entities" : qSketchRegion(id + part[1], true),
+                "direction" : vector(0, 1, 0),
+                "endBound" : BoundingType.BLIND,
+                "endDepth" : hw,
+                "startBound" : BoundingType.BLIND,
+                "startDepth" : hw
+            });
+        }
 
         // ---- swivel boss: plan view on a plane at Z = flat, extruded up to top -
         var bsk = newSketchOnPlane(context, id + "bossSketch", { "sketchPlane" : plane(vector(0 * millimeter, 0 * millimeter, flat), vector(0, 0, 1), vector(1, 0, 0)) });
@@ -137,7 +145,8 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "endDepth" : top - flat
         });
         opBoolean(context, id + "bodyUnion", {
-            "tools" : qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "boss", EntityType.BODY)]),
+            "tools" : qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "arm", EntityType.BODY),
+                              qCreatedBy(id + "axleBoss", EntityType.BODY), qCreatedBy(id + "boss", EntityType.BODY)]),
             "operationType" : BooleanOperationType.UNION
         });
         const body = qCreatedBy(id + "neck", EntityType.BODY);
