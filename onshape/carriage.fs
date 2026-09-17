@@ -52,6 +52,12 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.bossR, { (millimeter) : [8, 13, 25] } as LengthBoundSpec);
             annotation { "Name" : "Boss taper reaches neck at X" }
             isLength(definition.bossTaperX, { (millimeter) : [0, 2, 10] } as LengthBoundSpec);
+            annotation { "Name" : "Cap band thickness (full radius under the top face)" }
+            isLength(definition.capT, { (millimeter) : [4, 6, 15] } as LengthBoundSpec);
+            annotation { "Name" : "Stem radius (below the 45° cone)" }
+            isLength(definition.stemR, { (millimeter) : [8, 9.5, 13] } as LengthBoundSpec);
+            annotation { "Name" : "Cap / stem edge rounds" }
+            isLength(definition.capEdgeR, { (millimeter) : [0, 2, 4] } as LengthBoundSpec);
             annotation { "Name" : "Bushing bore diameter" }
             isLength(definition.bushingBoreD, { (millimeter) : [6, 12, 20] } as LengthBoundSpec);
             annotation { "Name" : "Bushing length" }
@@ -113,7 +119,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         // the arm polygon shares edges with the rectangle.)
         const sidePlane = plane(vector(0, 0, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)); // sketch (x,y) = world (X,Z)
         var sk = newSketchOnPlane(context, id + "neckSketch", { "sketchPlane" : sidePlane });
-        skRectangle(sk, "bossRect", { "firstCorner" : vector(-bossR, flat), "secondCorner" : vector(bossR, top) });
+        skRectangle(sk, "bossRect", { "firstCorner" : vector(0 * millimeter, flat), "secondCorner" : vector(bossR, top) });
         skSolve(sk);
         const pA = vector(definition.armFrontX, flat);
         const pB = vector(bossR, armTop);
@@ -150,9 +156,36 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "endBound" : BoundingType.BLIND,
             "endDepth" : top - flat
         });
+        // ---- cap: intersect the boss with a body of revolution about the shaft
+        //      axis — full radius for the top band, 45° cone, stem around the bore
+        const capBandZ = top - definition.capT;
+        const stemTopZ = capBandZ - (bossR - definition.stemR);
+        if (definition.stemR <= hw + 1 * millimeter)
+            throw regenError("Stem radius must exceed half the neck width by 1 mm (grazing intersection).");
+        if (definition.stemR - definition.bushingBoreD / 2 < 2.5 * millimeter)
+            throw regenError("Stem wall over the bushing bore is under 2.5 mm.");
+        var bsk2 = newSketchOnPlane(context, id + "bellSketch", { "sketchPlane" : sidePlane });
+        skPolyline(bsk2, "bell", { "points" : [
+            vector(0 * millimeter, top + 0.1 * millimeter), vector(bossR + 0.1 * millimeter, top + 0.1 * millimeter),
+            vector(bossR + 0.1 * millimeter, capBandZ + 0.1 * millimeter), vector(bossR, capBandZ), vector(definition.stemR, stemTopZ),
+            vector(definition.stemR, flat - 0.1 * millimeter), vector(0 * millimeter, flat - 0.1 * millimeter),
+            vector(0 * millimeter, top + 0.1 * millimeter)] });
+        skSolve(bsk2);
+        opRevolve(context, id + "bell", {
+            "entities" : qSketchRegion(id + "bellSketch", true),
+            "axis" : line(vector(0, 0, 0) * millimeter, vector(0, 0, 1)),
+            "angleForward" : 360 * degree
+        });
+        opBoolean(context, id + "capCut", {
+            "tools" : qUnion([qCreatedBy(id + "boss", EntityType.BODY), qCreatedBy(id + "bell", EntityType.BODY)]),
+            "operationType" : BooleanOperationType.INTERSECTION
+        });
+        // the intersection result is a new body; pick it up by exclusion
+        const capBody = qUnion(evaluateQuery(context, qSubtraction(qBodyType(qEverything(EntityType.BODY), BodyType.SOLID),
+                qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "arm", EntityType.BODY), qCreatedBy(id + "axleBoss", EntityType.BODY)]))));
         opBoolean(context, id + "bodyUnion", {
             "tools" : qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "arm", EntityType.BODY),
-                              qCreatedBy(id + "axleBoss", EntityType.BODY), qCreatedBy(id + "boss", EntityType.BODY)]),
+                              qCreatedBy(id + "axleBoss", EntityType.BODY), capBody]),
             "operationType" : BooleanOperationType.UNION
         });
         const body = qCreatedBy(id + "neck", EntityType.BODY);
@@ -208,7 +241,25 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             if (size(armEdges) > 0)
                 filletCascade(context, id + "armRound", qUnion(armEdges), definition.armEdgeR);
         }
-        // vertical taper / boss corners
+        // cap underside and cone->stem edges: arcs at those heights in front of the axis
+        if (definition.capEdgeR > 0)
+        {
+            for (var zr in [[capBandZ, "capRound"], [stemTopZ, "stemRound"]])
+            {
+                var arcs = [];
+                const q = qGeometry(qCoincidesWithPlane(qOwnedByBody(body, EntityType.EDGE),
+                        plane(vector(0 * millimeter, 0 * millimeter, zr[0]), vector(0, 0, 1))), GeometryType.ARC);
+                for (var e in evaluateQuery(context, q))
+                {
+                    const bb = evBox3d(context, { "topology" : e });
+                    if ((bb.minCorner[0] + bb.maxCorner[0]) / 2 < 0 * millimeter)
+                        arcs = append(arcs, e);
+                }
+                if (size(arcs) > 0)
+                    filletCascade(context, id + zr[1], qUnion(arcs), definition.capEdgeR);
+            }
+        }
+        // vertical taper / boss corners and stem/neck junctions
         if (definition.edgeR > 0)
         {
             const vert = qParallelEdges(qOwnedByBody(body, EntityType.EDGE), vector(0, 0, 1));
@@ -298,6 +349,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         treadW : 12 * millimeter, wheelW : 13.7 * millimeter, bossD : 20 * millimeter, wheelGap : 17 * millimeter,
         inboardT : 1 * millimeter, wheelClear : 1.5 * millimeter, showWheels : true,
         thrustH : 4 * millimeter, bossR : 13 * millimeter, bossTaperX : 2 * millimeter, bushingBoreD : 12 * millimeter,
+        capT : 6 * millimeter, stemR : 9.5 * millimeter, capEdgeR : 2 * millimeter,
         bushingL : 15 * millimeter, shaftClearD : 10.4 * millimeter, liftFloat : 0.3 * millimeter, stepT : 2 * millimeter, boltHoleD : 5.5 * millimeter,
         axleBossR : 9 * millimeter, axleD : 6 * millimeter, armFrontX : 6 * millimeter, armTopDepth : 12 * millimeter,
         edgeR : 2 * millimeter, armInnerR : 3 * millimeter, armEdgeR : 2.5 * millimeter, topEdgeR : 1.5 * millimeter

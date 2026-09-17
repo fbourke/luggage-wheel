@@ -198,6 +198,21 @@ ARM_FRONT_X = RETAIN_BOLT_HEAD_D / 2 + 1.25  # 6.0: arm leaves the flat just beh
 ARM_TOP_Z = -12.0                    # arm leaves the boss rear here (below this: arm; above: nothing)
 BODY_BOTTOM_Z = AXLE_Z - AXLE_BOSS_R # -37.5, bottom of the axle boss
 BODY_EDGE_R = 2.0                    # vertical-edge fillets on the body (boss taper corners)
+# --- boss "cap" (revolved about the shaft axis) ----------------------------
+# Full R13 only for the top band that backs the thrust washer; below it a
+# 45° cone down to a stem around the bore. Ears = the rim of the cap.
+CAP_T = 6.0                          # thickness of the full-radius band under the top face
+STEM_R = 9.5                         # stem radius: 3.5 mm wall over the Ø12 bushing bore; meets the
+                                     # neck faces at x=5.1 (33°) — keep it well clear of tangency (see design.md)
+CONE_H = BOSS_R - STEM_R             # 45° cone
+CAP_BAND_Z = BODY_TOP_Z - CAP_T      # -10: cap underside
+STEM_TOP_Z = CAP_BAND_Z - CONE_H     # -13.5: cone -> stem
+assert STEM_R > NECK_W / 2 + 1.0, "stem must stand clear of the neck faces (avoid a grazing intersection)"
+assert STEM_R - BUSHING_BORE_D / 2 >= 2.5, "stem wall over the bushing bore too thin"
+assert CAP_BAND_Z <= BODY_TOP_Z - 4.0, "cap band too thin to back the thrust washer"
+CAP_EDGE_R = 2.0                     # round on the cap underside edge
+STEM_EDGE_R = 2.0                    # round on the cone -> stem edge
+
 # --- cosmetics / DFM --------------------------------------------------------
 ARM_INNER_R = 3.0                    # internal corner radius where the arm meets the flat and the boss rear (>= tool radius, kills the stress riser)
 ARM_EDGE_R = 2.5                     # round on the arm's outline edges (the "cast" look); 16 mm neck leaves 11 flat between the rounds

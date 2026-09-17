@@ -64,13 +64,16 @@ below the land** and the axle is 28.5 mm down. Consequences:
 - Nothing can sit above the wheels. Everything that spans wider than the
   **16 mm neck** (wheel gap 17 − 2 × 0.5) has to be in front of the wheel
   circle or sculpted to it.
-- **Swivel boss**: a Ø26 round about the shaft axis (covers the Ø24 thrust
-  washer), half-round in front, tapering into the neck 3 mm behind the axis.
-  It runs from the top face at Z −4 down to a **flat at Z −24.6**, enclosing
-  the whole 15 mm bushing (where the tilting moment from the trailing wheels
-  goes) and the shaft end. Where the boss overhangs the wheels (|Y| > 8) it is
-  scooped to a cylinder 1.5 mm outside the tire; those two small "ears" are
-  the minimum needed to back the thrust washer.
+- **Swivel boss** — a "cap" of revolution about the shaft axis: **Ø26 for the
+  top 6 mm** (the band that backs the Ø24 thrust washer), a **45° cone** down
+  to a **Ø19 stem** around the bore, running to the **flat at Z −24.6** that
+  the bolt head bears on. In plan the cap is a half-round in front, tapering
+  into the neck 2 mm behind the axis. The stem gives 3.5 mm of wall over the
+  Ø12 bushing bore and encloses the shaft end. Wherever the boss overhangs the
+  wheels (|Y| > 8) it is scooped to a cylinder 1.5 mm outside the tire — this
+  trims the cap rim ("ears") and cuts the stem flush with the neck faces where
+  the wheels pass. Rounds: R2 on the cap underside edge, R1.5 on the top
+  perimeter, R2 on the cap corners.
 - **Arm**: in side view, a Ø18 round about the axle joined to the boss by two
   tangent lines — one from the boss rear at Z −12 (nothing above it), one from
   the flat just behind the bolt head. Nothing sits under the bolt head.
@@ -181,9 +184,17 @@ modelled).
   (`ARM_INNER_R`) — bigger than any sensible tool radius, and it's the only
   stress riser on the part (the arm is a cantilever off the boss).
 - **Rounds** are cosmetic and can be dropped or shrunk without telling us:
-  arm outline R2.5 (`ARM_EDGE_R`, leaves 11 mm flat on the 16 mm neck), boss
-  top perimeter R1.5, boss vertical corners R2. If the shop quotes the
-  rounds as expensive, delete them — chamfer 0.5 instead.
+  arm outline R2.5 (`ARM_EDGE_R`, leaves 11 mm flat on the 16 mm neck), cap
+  underside R2, boss top perimeter R1.5, cap corners R2. If the shop quotes
+  the rounds as expensive, delete them — chamfer 0.5 instead.
+- **The cap cone and stem** are turned-style features on a milled part: a 45°
+  chamfer mill from below, or 3D-surfaced. Cheap either way. The stem radius
+  (`STEM_R`) must stay > 9 so it meets the neck faces at a healthy angle —
+  at ~8.25 it grazes them tangentially, which is bad for both the cutter and
+  the CAD kernel.
+- **Modelling note:** in build123d `Part.intersect()` returns a `ShapeList`;
+  use `&` (see `make_body`). Silent no-op booleans on a ShapeList cost an
+  afternoon here.
 - **Critical features only:** Ø12 H7 bore and its squareness to the top face,
   the step depth (±0.05, sets the shaft float), neck width ±0.05, axle bore
   fit and parallelism. Everything else ±0.1.

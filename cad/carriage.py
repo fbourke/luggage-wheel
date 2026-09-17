@@ -12,18 +12,25 @@ import math
 
 from build123d import (
     Axis,
+    Box,
     Circle,
     Compound,
     Cylinder,
     Part,
     Plane,
     Polygon,
+    Polyline,
     Pos,
     Rectangle,
     Rot,
     Location,
+    ThreePointArc,
+    Wire,
+    chamfer,
     extrude,
     fillet,
+    make_face,
+    revolve,
 )
 
 import params as P
@@ -73,7 +80,8 @@ def make_body(fit_proto: bool = False) -> Part:
 
     # --- between the wheels (neck width): side profile = boss rectangle +
     #     tangent-line arm + round about the axle
-    boss_rect = Pos(0, (top + flat) / 2) * Rectangle(2 * P.BOSS_R, top - flat)
+    # rectangle from the shaft axis back to the boss rear; the front is the boss cap
+    boss_rect = Pos(P.BOSS_R / 2, (top + flat) / 2) * Rectangle(P.BOSS_R, top - flat)
     arm = Polygon(*P.ARM_PROFILE, align=None)
     axle_boss = Pos(ax, az) * Circle(P.AXLE_BOSS_R)
     profile = boss_rect + arm + axle_boss
@@ -90,12 +98,24 @@ def make_body(fit_proto: bool = False) -> Part:
     # --- swivel boss, plan view: half-round in front of the shaft axis, then
     #     straight tapers to the neck width. Scooped to the wheel circle where
     #     it overhangs the wheels.
-    half_round = Circle(P.BOSS_R) - Pos(P.BOSS_R, 0) * Rectangle(2 * P.BOSS_R, 4 * P.BOSS_R)
-    taper = Polygon((0, P.BOSS_R), (P.BOSS_TAPER_X, hw), (P.BOSS_TAPER_X, -hw), (0, -P.BOSS_R), align=None)
-    boss = extrude(Plane.XY.offset(flat) * (half_round + taper), amount=top - flat)
-    boss -= _cyl_y(P.WHEEL_OD / 2 + P.WHEEL_CLEAR, 2 * P.BOSS_R + 10, ax, az)
+    #     One closed wire (arc + taper polyline): a face union of two touching
+    #     faces would extrude as two solids and break the bell intersection.
+    R = P.BOSS_R
+    plan = make_face(Wire([ThreePointArc((0, R), (-R, 0), (0, -R))]
+                          + list(Polyline((0, -R), (P.BOSS_TAPER_X, -hw), (P.BOSS_TAPER_X, hw), (0, R)).edges())))
+    boss = extrude(Plane.XY.offset(flat) * plan, amount=top - flat)
+    # revolved "cap": full radius for the top band, 45° cone, stem around the bore
+    bell_prof = Polygon((0, top + 0.1), (R + 0.1, top + 0.1), (R + 0.1, P.CAP_BAND_Z + 0.1), (R, P.CAP_BAND_Z),
+                        (P.STEM_R, P.STEM_TOP_Z), (P.STEM_R, flat - 0.1), (0, flat - 0.1), align=None)
+    boss = boss & revolve(Plane.XZ * bell_prof, Axis.Z, 360)   # NB: .intersect() returns a ShapeList here
+    assert isinstance(boss, Part) and len(boss.solids()) == 1
+    # scoop to the wheel circle where the cap overhangs the wheels, sparing the neck
+    scoop = _cyl_y(P.WHEEL_OD / 2 + P.WHEEL_CLEAR, 2 * R + 10, ax, az)
+    scoop -= Pos(0, 0, -20) * Box(200, 2 * hw, 100)
+    boss -= scoop
 
     body = neck + boss
+    assert len(body.solids()) == 1, "body did not fuse into one solid"
 
     # --- vertical-edge fillets (taper/neck junction, boss rear corners),
     #     one edge at a time so an awkward edge at the scoop doesn't abort all
@@ -106,7 +126,12 @@ def make_body(fit_proto: bool = False) -> Part:
                 if abs(abs(e.center().Y) - hw) < 1e-3 and e.length > 0.3
                 and (e.center().X > P.BOSS_R + 0.2 or e.center().Z < flat - 0.2)]
     body = _try_fillet(body, _arm_outline(body), P.ARM_EDGE_R, "arm outline")
-    # the vertical taper/boss corners, one at a time, before the top round they run into
+    # cap underside edge and cone -> stem edge (arcs at those heights, in front of the axis)
+    def _arcs_at(b, z):
+        return [e for e in b.edges() if abs(e.center().Z - z) < 0.3 and e.center().X < 0 and e.length > 0.3]
+    body = _try_fillet(body, _arcs_at(body, P.CAP_BAND_Z), P.CAP_EDGE_R, "cap edge")
+    body = _try_fillet(body, _arcs_at(body, P.STEM_TOP_Z), P.STEM_EDGE_R, "cone/stem edge")
+    # the vertical taper/boss corners and stem/neck junctions, one at a time, before the top round
     body = _fillet_vertical(body, P.BODY_EDGE_R)
     body = _try_fillet(body, [e for e in body.edges() if abs(e.center().Z - top) < 1e-3], P.TOP_EDGE_R, "top perimeter")
 
