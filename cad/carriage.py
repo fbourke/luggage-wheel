@@ -130,10 +130,9 @@ def make_body(fit_proto: bool = False) -> Part:
     def _arcs_at(b, z):
         return [e for e in b.edges() if abs(e.center().Z - z) < 0.3 and e.center().X < 0 and e.length > 0.3]
     body = _try_fillet(body, _arcs_at(body, P.CAP_BAND_Z), P.CAP_EDGE_R, "cap edge")
-    body = _try_fillet(body, _arcs_at(body, P.STEM_TOP_Z), P.STEM_EDGE_R, "cone/stem edge")
-    # the vertical taper/boss corners and stem/neck junctions, one at a time, before the top round
-    body = _fillet_vertical(body, P.BODY_EDGE_R)
+    body = _try_fillet(body, _arcs_at(body, P.STEM_TOP_Z), P.STEM_EDGE_R, "cone/stem edge", convex=False)
     body = _try_fillet(body, [e for e in body.edges() if abs(e.center().Z - top) < 1e-3], P.TOP_EDGE_R, "top perimeter")
+    body = _fillet_vertical(body, P.BODY_EDGE_R)
 
     if fit_proto:
         body += _cyl_z(P.THRUST_OD / 2, top, 0.0)                 # thrust stack as a collar
@@ -141,8 +140,11 @@ def make_body(fit_proto: bool = False) -> Part:
         body -= _cyl_z(P.BOLT_HOLE_D / 2, flat - 1, P.STEP_CEILING_Z + 1)
         return body
 
-    # --- swivel bore: bushing seat from the top, clearance bore down to the flat
+    # --- swivel bore: bushing seat from the top, clearance bore down to the step
+    v_before = body.volume
     body -= _cyl_z(P.BUSHING_BORE_D / 2, top - P.BUSHING_L, top + 1)
+    assert v_before - body.volume > 0.8 * math.pi * (P.BUSHING_BORE_D / 2) ** 2 * P.BUSHING_L, \
+        "bushing bore did not cut: body solid is corrupt (check fillet stages)"
     body -= _cyl_z(P.SHAFT_CLEAR_BORE_D / 2, P.STEP_CEILING_Z, top - P.BUSHING_L + 1)
     body -= _cyl_z(P.BOLT_HOLE_D / 2, flat - 1, P.STEP_CEILING_Z + 1)      # bolt shank through the step
 
@@ -167,15 +169,26 @@ def make_body(fit_proto: bool = False) -> Part:
     return body
 
 
-def _try_fillet(body: Part, edges, r: float, label: str) -> Part:
-    """Fillet a group of edges, backing off the radius; leave sharp if nothing works."""
+def _try_fillet(body: Part, edges, r: float, label: str, convex: bool = True) -> Part:
+    """Fillet a group of edges, backing off the radius; leave sharp if nothing works.
+
+    OCCT sometimes returns a fillet result that passes is_valid but is inside-out
+    (volume goes the wrong way and later booleans become no-ops). A round on a
+    convex edge must remove material, on a concave edge must add it; anything
+    else is rejected and the next radius tried."""
     if not edges:
         return body
+    v0 = body.volume
     for rr in (r, r * 0.75, r * 0.5):
         try:
-            return fillet(edges, rr)
+            out = fillet(edges, rr)
         except Exception:
             continue
+        dv = out.volume - v0
+        good = (dv < 1e-6) if convex else (dv > -1e-6)
+        if good and len(out.solids()) == 1:
+            return out
+        print(f"  ! {label} fillet R{rr:.2f} produced a bad solid (dV={dv:+.1f}); retrying smaller")
     print(f"  ! {label} fillet failed at R{r}; left sharp")
     return body
 

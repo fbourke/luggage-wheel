@@ -168,17 +168,25 @@ BUSHING_BORE_D = 12.0      # H7 in body -> press fit for the bushing
 # 3 mm hex key from underneath, between the wheels.
 SHAFT_CLEAR_BORE_D = SHAFT_D + 0.4   # between bushing and step; never touches the shaft
 PROTO_SHAFT_BORE_D = SHAFT_D + 0.4   # one-piece printed proto: bare shaft in a plain bore (FDM prints undersize; ream if tight)
-RETAIN_LIFT_CLEARANCE = 0.3          # axial float: shaft end -> step ceiling, when the case is lifted
-STEP_T = 2.0                         # solid aluminium under the shaft end (carries only the carriage's own weight)
+# The bolt is POSITION-controlled: it bottoms out in the shaft's blind thread,
+# and the head then sits a fixed distance below the shaft end. Measured on the
+# case (2026-09-17): head underside 8.5 mm below the shaft end when bottomed.
+# The body floats between the thrust stack (rolling) and the bolt head (lifted).
+BLIND_DEPTH = RETAIN_BOLT_L - 8.5    # 10.5: depth of the shaft's blind thread (19 mm bolt bottoms with 8.5 exposed)
+BOLT_STICKOUT = RETAIN_BOLT_L - BLIND_DEPTH   # shaft end -> head underside, bolt bottomed (8.5 with the OEM bolt;
+                                              # an M5x16 would give 5.5 and a 3 mm shorter stem)
+RETAIN_LIFT_CLEARANCE = 0.3          # axial float: flat sits this far above the head when rolling
 BOLT_HOLE_D = 5.5                    # M5 shank clearance through the step
-STEP_CEILING_Z = -SHAFT_PROTRUSION + RETAIN_LIFT_CLEARANCE   # -22.62: shaft end floats 0.3 above this
-BOSS_BOTTOM_Z = STEP_CEILING_Z - STEP_T                        # -24.62: boss bottom flat, bolt head bears here
+STEP_CEILING_Z = -SHAFT_PROTRUSION - RETAIN_LIFT_CLEARANCE    # -23.22: 0.3 BELOW the shaft end, never touches
+BOSS_BOTTOM_Z = -SHAFT_PROTRUSION - BOLT_STICKOUT + RETAIN_LIFT_CLEARANCE   # -31.12: flat, 0.3 above the bottomed head
+STEP_T = STEP_CEILING_Z - BOSS_BOTTOM_Z                        # 7.9 of solid aluminium under the shaft end
 RETAIN_CEILING_Z = STEP_CEILING_Z    # legacy name
+assert STEP_T >= 2.0, "bolt sticks out too little for a closed bore; use a longer bolt or a washer stack"
 assert (SHAFT_CLEAR_BORE_D - BOLT_HOLE_D) / 2 >= 2.0, "step annulus too narrow to carry the bolt head"
 assert RETAIN_BOLT_HEAD_D > BOLT_HOLE_D + 2.0, "bolt head must overlap the step by >= 1 mm all round"
 assert STEP_CEILING_Z < BODY_TOP_Z - BUSHING_L, \
     "shaft too short: bushing would run into the step"
-BOLT_HEAD_BOTTOM_Z = BOSS_BOTTOM_Z - RETAIN_BOLT_HEAD_H        # -27.37, exposed
+BOLT_HEAD_BOTTOM_Z = -SHAFT_PROTRUSION - BOLT_STICKOUT - RETAIN_BOLT_HEAD_H   # -34.17, exposed
 
 # --- body shape ------------------------------------------------------------
 # Swivel boss: a round about the shaft axis, half-round in front, tapering

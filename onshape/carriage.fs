@@ -64,10 +64,10 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.bushingL, { (millimeter) : [5, 15, 25] } as LengthBoundSpec);
             annotation { "Name" : "Shaft clearance bore diameter" }
             isLength(definition.shaftClearD, { (millimeter) : [6, 10.4, 20] } as LengthBoundSpec);
-            annotation { "Name" : "Shaft end float above the step" }
+            annotation { "Name" : "Lift float (flat above the bottomed bolt head)" }
             isLength(definition.liftFloat, { (millimeter) : [0.1, 0.3, 2] } as LengthBoundSpec);
-            annotation { "Name" : "Step thickness under the shaft end" }
-            isLength(definition.stepT, { (millimeter) : [1, 2, 5] } as LengthBoundSpec);
+            annotation { "Name" : "Bolt stick-out: shaft end to head underside, bolt bottomed" }
+            isLength(definition.boltStickout, { (millimeter) : [2.5, 8.5, 15] } as LengthBoundSpec);
             annotation { "Name" : "Bolt shank hole diameter" }
             isLength(definition.boltHoleD, { (millimeter) : [3, 5.5, 9] } as LengthBoundSpec);
         }
@@ -96,8 +96,8 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         const r = definition.wheelOD / 2;
         const axleZ = -(definition.landToFloor - r);
         const top = -definition.thrustH;                                   // body top face
-        const stepZ = -definition.shaftProtrusion + definition.liftFloat;  // step ceiling: shaft end floats above it
-        const flat = stepZ - definition.stepT;                              // boss bottom flat; bolt head bears here
+        const stepZ = -definition.shaftProtrusion - definition.liftFloat;                            // step ceiling, just below the shaft end
+        const flat = -definition.shaftProtrusion - definition.boltStickout + definition.liftFloat;   // flat sits liftFloat above the bottomed head
         const armTop = -definition.armTopDepth;
         const neckW = definition.wheelGap - 1 * millimeter;
         const hw = neckW / 2;
@@ -353,7 +353,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         inboardT : 1 * millimeter, wheelClear : 1.5 * millimeter, showWheels : true,
         thrustH : 4 * millimeter, bossR : 13 * millimeter, bossTaperX : 2 * millimeter, bushingBoreD : 12 * millimeter,
         capT : 6 * millimeter, stemR : 9.5 * millimeter, capEdgeR : 2 * millimeter,
-        bushingL : 15 * millimeter, shaftClearD : 10.4 * millimeter, liftFloat : 0.3 * millimeter, stepT : 2 * millimeter, boltHoleD : 5.5 * millimeter,
+        bushingL : 15 * millimeter, shaftClearD : 10.4 * millimeter, liftFloat : 0.3 * millimeter, boltStickout : 8.5 * millimeter, boltHoleD : 5.5 * millimeter,
         axleBossR : 9 * millimeter, axleD : 6 * millimeter, armFrontX : 6 * millimeter, armTopDepth : 12 * millimeter,
         edgeR : 2 * millimeter, armInnerR : 3 * millimeter, armEdgeR : 2.5 * millimeter, topEdgeR : 1.5 * millimeter
     });

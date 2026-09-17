@@ -112,21 +112,30 @@ no ball bearing with a Ø10 bore fits inside an 18 mm neck anyway (6800 is
 Ø19 OD). Shaft finish matters more than the bushing: if the shaft is rough or
 plated-and-chipped, polish it.
 
-**Retention** — OEM style, closed bore. The Ø10.4 shaft clearance bore stops
-at an internal **step 0.3 mm below the shaft end** (Z −22.62); a **Ø5.5 hole**
-for the bolt shank continues through a **2 mm step** to the boss's bottom flat
-(Z −24.62). The existing **M5 button-head bolt (Ø9.5 head, 19 mm under head)**
-threads into the shaft end with its head bearing directly on the flat. Under
-normal rolling nothing touches (the 0.3 float); lift the case and the bolt
-head pulls the body up by the step. No washer, and the shaft end is captured
-inside the body. A 3 mm hex key reaches the bolt from below between the
-wheels (point the key's long arm forward).
+**Retention** — OEM style, closed bore, **position-controlled by the bolt
+bottoming out**. Measured: the existing M5 × 19 button head bottoms in the
+shaft's blind thread (10.5 deep) with its **head underside 8.5 mm below the
+shaft end**. That head is the fixed stop the body hangs from, so:
 
-Why not a plain flat with a washer (the previous revision): it worked on the
-printed proto — the shaft sat 1.8 mm proud, by design — but the closed bore is
-one part fewer, stiffer around the shaft end, and matches what the OEM did.
+- Ø10.4 shaft clearance bore down to a **step ceiling 0.3 mm *below* the shaft
+  end** (Z −23.22) — never touches;
+- **7.9 mm of solid aluminium** under that, with a **Ø5.5 hole** for the shank;
+- **flat at Z −31.12**, i.e. 0.3 mm above the bottomed head (Z −31.42).
 
-Bushing bottom (Z −19) to the step (Z −22.62): 3.6 mm of clearance bore.
+Rolling, the case weight goes land → thrust stack → body and the flat rides
+0.3 above the head; lift the case and the body drops 0.3 onto the head. The
+bolt is tightened to bottom, not to clamp — there is nothing to clamp against
+and clamping would preload the needle bearing. No washer; shaft end captured.
+A 3 mm hex key reaches the bolt from below between the wheels.
+
+`BOLT_STICKOUT = RETAIN_BOLT_L − 10.5` in `params.py`: a shorter **M5 × 16**
+bolt would bottom with 5.5 exposed and shorten the stem by 3 mm (≈ −3 g);
+M5 × 14 → 3.5. The default keeps the OEM bolt.
+
+Earlier revisions had the step 2 mm thick with the ceiling 0.3 mm *above* the
+shaft end — both wrong: the shaft would have bottomed on the step and the
+bolt could never have reached the flat. The printed proto with that geometry
+sat loose by ~6.5 mm on the bolt, which is what flagged it.
 
 ## Wheel axle — single through-pin
 
@@ -163,8 +172,8 @@ the body and the circlips.
 | Axle bore | Ø6.00 (`ots`) / Ø8.00 (`machined`) | +0.005 / +0.015 | light slip fit for an h6 pin, Loctite 638 |
 | Axle bore ⟂ to the Y faces of the neck | — | ≤ 0.02 | wheels must run parallel |
 | Neck width | 16.0 | ±0.05 | sets wheel gap |
-| Step ceiling (bottom of Ø10.4 bore) | 18.62 below the top face | **±0.05** | sets the 0.3 shaft-end float; too shallow and the shaft bottoms, lifting the thrust stack |
-| Boss bottom flat | 20.62 below the top face | ±0.1 | bolt head seat |
+| Step ceiling (bottom of Ø10.4 bore) | 19.22 below the top face | ±0.1 | 0.3 clear of the shaft end; deeper is harmless |
+| Boss bottom flat | 27.12 below the top face | **±0.05** | sets the 0.3 lift float against the bottomed bolt head; too far and the body rattles, too close and the head lifts the thrust stack |
 | Bolt hole | Ø5.5 through the step | ±0.1 | M5 shank clearance |
 | Shaft clearance bore | Ø10.4 | ±0.1 | must never touch the Ø9.8 shaft |
 | Everything else | as STEP | ±0.1 | — |
