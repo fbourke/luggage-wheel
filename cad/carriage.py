@@ -76,7 +76,16 @@ def make_body(fit_proto: bool = False) -> Part:
     boss_rect = Pos(0, (top + flat) / 2) * Rectangle(2 * P.BOSS_R, top - flat)
     arm = Polygon(*P.ARM_PROFILE, align=None)
     axle_boss = Pos(ax, az) * Circle(P.AXLE_BOSS_R)
-    neck = extrude(Plane.XZ * (boss_rect + arm + axle_boss), amount=hw, both=True)
+    profile = boss_rect + arm + axle_boss
+    # internal corner radii where the arm meets the flat (pA) and the boss rear (pB)
+    vs = profile.vertices()
+    corners = [v for v in vs if (abs(v.X - P.ARM_FRONT_X) < 0.05 and abs(v.Y - flat) < 0.05)
+               or (abs(v.X - P.BOSS_R) < 0.05 and abs(v.Y - P.ARM_TOP_Z) < 0.05)]
+    try:
+        profile = fillet(corners, P.ARM_INNER_R)
+    except Exception as exc:  # pragma: no cover
+        print(f"  ! arm internal fillets failed ({exc})")
+    neck = extrude(Plane.XZ * profile, amount=hw, both=True)
 
     # --- swivel boss, plan view: half-round in front of the shaft axis, then
     #     straight tapers to the neck width. Scooped to the wheel circle where
@@ -90,7 +99,16 @@ def make_body(fit_proto: bool = False) -> Part:
 
     # --- vertical-edge fillets (taper/neck junction, boss rear corners),
     #     one edge at a time so an awkward edge at the scoop doesn't abort all
+    # --- cosmetic rounds first (they need clean topology): arm outline (edges
+    #     in the neck side planes, outside the boss footprint), boss top perimeter
+    def _arm_outline(b):
+        return [e for e in b.edges()
+                if abs(abs(e.center().Y) - hw) < 1e-3 and e.length > 0.3
+                and (e.center().X > P.BOSS_R + 0.2 or e.center().Z < flat - 0.2)]
+    body = _try_fillet(body, _arm_outline(body), P.ARM_EDGE_R, "arm outline")
+    # the vertical taper/boss corners, one at a time, before the top round they run into
     body = _fillet_vertical(body, P.BODY_EDGE_R)
+    body = _try_fillet(body, [e for e in body.edges() if abs(e.center().Z - top) < 1e-3], P.TOP_EDGE_R, "top perimeter")
 
     if fit_proto:
         body += _cyl_z(P.THRUST_OD / 2, top, 0.0)                 # thrust stack as a collar
@@ -105,6 +123,35 @@ def make_body(fit_proto: bool = False) -> Part:
 
     # --- axle bore through the arm
     body -= _cyl_y(P.AXLE_PIN_D / 2, P.NECK_W + 2, ax, az)
+
+    # --- break every remaining sharp edge that will take it (best effort)
+    if P.EDGE_BREAK > 0:
+        done = 0
+        for e in list(body.edges()):
+            if e.length < 1.0:
+                continue
+            q = min(body.edges(), key=lambda k: (k.center() - e.center()).length)
+            if (q.center() - e.center()).length > 0.3:
+                continue
+            try:
+                body = chamfer([q], P.EDGE_BREAK)
+                done += 1
+            except Exception:
+                pass
+        print(f"  edge breaks applied: {done}")
+    return body
+
+
+def _try_fillet(body: Part, edges, r: float, label: str) -> Part:
+    """Fillet a group of edges, backing off the radius; leave sharp if nothing works."""
+    if not edges:
+        return body
+    for rr in (r, r * 0.75, r * 0.5):
+        try:
+            return fillet(edges, rr)
+        except Exception:
+            continue
+    print(f"  ! {label} fillet failed at R{r}; left sharp")
     return body
 
 

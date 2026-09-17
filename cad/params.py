@@ -197,7 +197,12 @@ AXLE_BOSS_R = 9.0                    # Ø18 round about the Ø8 axle bore -> 5 m
 ARM_FRONT_X = RETAIN_BOLT_HEAD_D / 2 + 1.25  # 6.0: arm leaves the flat just behind the bolt head
 ARM_TOP_Z = -12.0                    # arm leaves the boss rear here (below this: arm; above: nothing)
 BODY_BOTTOM_Z = AXLE_Z - AXLE_BOSS_R # -37.5, bottom of the axle boss
-BODY_EDGE_R = 2.0                    # vertical-edge fillets on the body
+BODY_EDGE_R = 2.0                    # vertical-edge fillets on the body (boss taper corners)
+# --- cosmetics / DFM --------------------------------------------------------
+ARM_INNER_R = 3.0                    # internal corner radius where the arm meets the flat and the boss rear (>= tool radius, kills the stress riser)
+ARM_EDGE_R = 2.5                     # round on the arm's outline edges (the "cast" look); 16 mm neck leaves 11 flat between the rounds
+TOP_EDGE_R = 1.5                     # round on the boss top perimeter
+EDGE_BREAK = 0.0                     # not modelled (OCCT chamfers fail on this topology); drawing note "break all edges 0.3-0.5"
 assert ARM_TOP_Z > BOSS_BOTTOM_Z and ARM_TOP_Z < BODY_TOP_Z - 4
 assert BOLT_HEAD_BOTTOM_Z > -LAND_TO_FLOOR + 10, "bolt head too close to the floor"
 

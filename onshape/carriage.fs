@@ -77,6 +77,12 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.armTopDepth, { (millimeter) : [5, 12, 20] } as LengthBoundSpec);
             annotation { "Name" : "Vertical edge fillet" }
             isLength(definition.edgeR, { (millimeter) : [0, 2, 5] } as LengthBoundSpec);
+            annotation { "Name" : "Arm internal corner radius" }
+            isLength(definition.armInnerR, { (millimeter) : [0, 3, 6] } as LengthBoundSpec);
+            annotation { "Name" : "Arm outline round" }
+            isLength(definition.armEdgeR, { (millimeter) : [0, 2.5, 5] } as LengthBoundSpec);
+            annotation { "Name" : "Top perimeter round" }
+            isLength(definition.topEdgeR, { (millimeter) : [0, 1.5, 4] } as LengthBoundSpec);
         }
     }
     {
@@ -173,7 +179,36 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "operationType" : BooleanOperationType.SUBTRACTION
         });
 
-        // ---- vertical-edge fillets (best effort) --------------------------------
+        // ---- DFM / cosmetics (all best effort; a failed fillet leaves the edge sharp) ----
+        // internal corner radii where the arm meets the flat (pA) and the boss rear (pB)
+        if (definition.armInnerR > 0)
+        {
+            const yEdges = qParallelEdges(qOwnedByBody(body, EntityType.EDGE), vector(0, 1, 0));
+            filletCascade(context, id + "innerR", qUnion([
+                qContainsPoint(yEdges, vector(definition.armFrontX, 0 * millimeter, flat)),
+                qContainsPoint(yEdges, vector(bossR, 0 * millimeter, armTop))]), definition.armInnerR);
+        }
+        // arm outline rounds: edges lying in the neck side planes, outside the boss footprint
+        if (definition.armEdgeR > 0)
+        {
+            var armEdges = [];
+            for (var side in [1, -1])
+            {
+                const sidePlaneQ = qCoincidesWithPlane(qOwnedByBody(body, EntityType.EDGE),
+                        plane(vector(0 * millimeter, side * hw, 0 * millimeter), vector(0, 1, 0)));
+                for (var e in evaluateQuery(context, sidePlaneQ))
+                {
+                    const bb = evBox3d(context, { "topology" : e });
+                    const cx = (bb.minCorner[0] + bb.maxCorner[0]) / 2;
+                    const cz = (bb.minCorner[2] + bb.maxCorner[2]) / 2;
+                    if (cx > bossR + 0.2 * millimeter || cz < flat - 0.2 * millimeter)
+                        armEdges = append(armEdges, e);
+                }
+            }
+            if (size(armEdges) > 0)
+                filletCascade(context, id + "armRound", qUnion(armEdges), definition.armEdgeR);
+        }
+        // vertical taper / boss corners
         if (definition.edgeR > 0)
         {
             const vert = qParallelEdges(qOwnedByBody(body, EntityType.EDGE), vector(0, 0, 1));
@@ -181,6 +216,12 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             {
                 opFillet(context, id + "fillet", { "entities" : vert, "radius" : definition.edgeR });
             }
+        }
+        // top perimeter round
+        if (definition.topEdgeR > 0)
+        {
+            filletCascade(context, id + "topRound", qCoincidesWithPlane(qOwnedByBody(body, EntityType.EDGE),
+                    plane(vector(0 * millimeter, 0 * millimeter, top), vector(0, 0, 1))), definition.topEdgeR);
         }
 
         // ---- bores -------------------------------------------------------------
@@ -259,8 +300,16 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         thrustH : 4 * millimeter, bossR : 13 * millimeter, bossTaperX : 2 * millimeter, bushingBoreD : 12 * millimeter,
         bushingL : 15 * millimeter, shaftClearD : 10.4 * millimeter, liftFloat : 0.3 * millimeter, stepT : 2 * millimeter, boltHoleD : 5.5 * millimeter,
         axleBossR : 9 * millimeter, axleD : 6 * millimeter, armFrontX : 6 * millimeter, armTopDepth : 12 * millimeter,
-        edgeR : 2 * millimeter
+        edgeR : 2 * millimeter, armInnerR : 3 * millimeter, armEdgeR : 2.5 * millimeter, topEdgeR : 1.5 * millimeter
     });
+
+/** Fillet with a shrinking radius; give up silently if no radius works. */
+function filletCascade(context is Context, id is Id, edges is Query, r is ValueWithUnits)
+{
+    try silent { opFillet(context, id + "a", { "entities" : edges, "radius" : r }); return; }
+    try silent { opFillet(context, id + "b", { "entities" : edges, "radius" : r * 0.75 }); return; }
+    try silent { opFillet(context, id + "c", { "entities" : edges, "radius" : r * 0.5 }); return; }
+}
 
 /** Tangent point on the circle (c, r) from an external 2D point p. upper=true picks the candidate with the larger y. */
 function tangentPoint(p is Vector, c is Vector, r is ValueWithUnits, upper is boolean) returns Vector

@@ -166,7 +166,32 @@ the body and the circlips.
 | Shaft clearance bore | Ø10.4 | ±0.1 | must never touch the Ø9.8 shaft |
 | Everything else | as STEP | ±0.1 | — |
 
-Finish: as-machined or bead-blast + anodise. Break all edges.
+Finish: as-machined or bead-blast + anodise. **Break all edges 0.3–0.5** (not
+modelled).
+
+## Body — DFM notes
+
+- **Setups (3-axis mill):** (1) side, Y−: neck side profile, arm rounds,
+  axle bore, wheel scoop (a Ø26.5 concave about the axle — ball or bull-nose
+  mill, or leave it as a 3D-surfaced pass); (2) side, Y+: mirror; (3) top,
+  Z+: boss plan profile, Ø12 H7 bushing bore, Ø10.4 clearance bore to the
+  step, top round; (4) bottom, Z−: bottom flat, Ø5.5 bolt hole. A shop will
+  likely do 1+2 as one op with a flip and 3+4 likewise. Stock: 30 × 40 × 50.
+- **Internal corners** where the arm meets the flat and the boss rear are **R3**
+  (`ARM_INNER_R`) — bigger than any sensible tool radius, and it's the only
+  stress riser on the part (the arm is a cantilever off the boss).
+- **Rounds** are cosmetic and can be dropped or shrunk without telling us:
+  arm outline R2.5 (`ARM_EDGE_R`, leaves 11 mm flat on the 16 mm neck), boss
+  top perimeter R1.5, boss vertical corners R2. If the shop quotes the
+  rounds as expensive, delete them — chamfer 0.5 instead.
+- **Critical features only:** Ø12 H7 bore and its squareness to the top face,
+  the step depth (±0.05, sets the shaft float), neck width ±0.05, axle bore
+  fit and parallelism. Everything else ±0.1.
+- **Thin spots:** 2 mm between the Ø12 bushing bore and the neck faces; 2 mm
+  step under the shaft end; 1.5 mm minimum on the boss "ears" over the wheels.
+  All fine in 6061 but don't let anyone "clean up" the neck faces.
+- **Material:** 6061-T6. 7075 is pointless here; 6082 is the EU equivalent.
+- **Quantity 4** — ask for all four in one setup on a single bar of stock.
 
 # Wheel (`machined` variant only)
 
