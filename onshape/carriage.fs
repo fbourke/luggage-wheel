@@ -2,14 +2,14 @@ FeatureScript 3070;
 import(path : "onshape/std/common.fs", version : "3070.0");
 
 /*
- * Luggage spinner carriage — parametric body + reference wheels/axle.
+ * Luggage spinner carriage - parametric body + reference wheels/axle.
  * Mirrors cad/params.py (WHEEL_SOURCE=ots) from github.com/fbourke/luggage-wheel.
  *
  * Frame: X fore/aft (+X toward the wheels), Y across the case, Z up.
  * Z = 0 is the LAND (recess ceiling the thrust stack bears on); the case skin
  * is at Z = -shaftProtrusion; the floor is at Z = -landToFloor.
  * Retention is OEM-style: the shaft bore closes to a step just below the
- * shaft end and the M5 button head bears on the boss's bottom flat (no washer).
+ * shaft end and the M5 button head bears on the boss's bottom flatZ (no washer).
  */
 
 annotation { "Feature Type Name" : "Luggage carriage" }
@@ -54,7 +54,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.bossTaperX, { (millimeter) : [0, 2, 10] } as LengthBoundSpec);
             annotation { "Name" : "Cap band thickness (full radius under the top face)" }
             isLength(definition.capT, { (millimeter) : [4, 6, 15] } as LengthBoundSpec);
-            annotation { "Name" : "Stem radius (below the 45° cone)" }
+            annotation { "Name" : "Stem radius (below the 45-degree cone)" }
             isLength(definition.stemR, { (millimeter) : [8, 9.5, 13] } as LengthBoundSpec);
             annotation { "Name" : "Cap / stem edge rounds" }
             isLength(definition.capEdgeR, { (millimeter) : [0, 2, 4] } as LengthBoundSpec);
@@ -64,7 +64,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.bushingL, { (millimeter) : [5, 15, 25] } as LengthBoundSpec);
             annotation { "Name" : "Shaft clearance bore diameter" }
             isLength(definition.shaftClearD, { (millimeter) : [6, 10.4, 20] } as LengthBoundSpec);
-            annotation { "Name" : "Lift float (flat above the bottomed bolt head)" }
+            annotation { "Name" : "Lift float (flatZ above the bottomed bolt head)" }
             isLength(definition.liftFloat, { (millimeter) : [0.1, 0.3, 2] } as LengthBoundSpec);
             annotation { "Name" : "Bolt stick-out: shaft end to head underside, bolt bottomed" }
             isLength(definition.boltStickout, { (millimeter) : [2.5, 8.5, 15] } as LengthBoundSpec);
@@ -77,7 +77,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             isLength(definition.axleBossR, { (millimeter) : [5, 9, 20] } as LengthBoundSpec);
             annotation { "Name" : "Axle bore diameter" }
             isLength(definition.axleD, { (millimeter) : [3, 6, 12] } as LengthBoundSpec);
-            annotation { "Name" : "Arm leaves flat at X" }
+            annotation { "Name" : "Arm leaves flatZ at X" }
             isLength(definition.armFrontX, { (millimeter) : [3, 6, 15] } as LengthBoundSpec);
             annotation { "Name" : "Arm leaves boss rear at Z (depth below land)" }
             isLength(definition.armTopDepth, { (millimeter) : [5, 12, 20] } as LengthBoundSpec);
@@ -97,7 +97,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         const axleZ = -(definition.landToFloor - r);
         const top = -definition.thrustH;                                   // body top face
         const stepZ = -definition.shaftProtrusion - definition.liftFloat;                            // step ceiling, just below the shaft end
-        const flat = -definition.shaftProtrusion - definition.boltStickout + definition.liftFloat;   // flat sits liftFloat above the bottomed head
+        const flatZ = -definition.shaftProtrusion - definition.boltStickout + definition.liftFloat;   // flatZ sits liftFloat above the bottomed head
         const armTop = -definition.armTopDepth;
         const neckW = definition.wheelGap - 1 * millimeter;
         const hw = neckW / 2;
@@ -110,8 +110,8 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             throw regenError("Shaft too short: bushing would run into the step.");
         if ((definition.shaftClearD - definition.boltHoleD) / 2 < 1.5 * millimeter)
             throw regenError("Bolt hole too large: the step annulus under the shaft end is too narrow.");
-        if (armTop <= flat || armTop >= top - 4 * millimeter)
-            throw regenError("Arm top must lie between the boss flat and 4 mm below the top face.");
+        if (armTop <= flatZ || armTop >= top - 4 * millimeter)
+            throw regenError("Arm top must lie between the boss flatZ and 4 mm below the top face.");
 
         // ---- neck: side profile on the XZ plane, extruded symmetric in Y ------
         // Three separate sketches + extrudes, then a solid union. (One sketch
@@ -119,15 +119,15 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         // the arm polygon shares edges with the rectangle.)
         const sidePlane = plane(vector(0, 0, 0) * millimeter, vector(0, -1, 0), vector(1, 0, 0)); // sketch (x,y) = world (X,Z)
         var sk = newSketchOnPlane(context, id + "neckSketch", { "sketchPlane" : sidePlane });
-        skRectangle(sk, "bossRect", { "firstCorner" : vector(0 * millimeter, flat), "secondCorner" : vector(bossR, top) });
+        skRectangle(sk, "bossRect", { "firstCorner" : vector(0 * millimeter, flatZ), "secondCorner" : vector(bossR, top) });
         skSolve(sk);
-        const pA = vector(definition.armFrontX, flat);
+        const pA = vector(definition.armFrontX, flatZ);
         const pB = vector(bossR, armTop);
         const c = vector(trail, axleZ);
         const tA = tangentPoint(pA, c, aR, false);   // lower tangent
         const tB = tangentPoint(pB, c, aR, true);    // upper/rear tangent
         var ask = newSketchOnPlane(context, id + "armSketch", { "sketchPlane" : sidePlane });
-        skPolyline(ask, "armPoly", { "points" : [pA, tA, c, tB, pB, vector(bossR, flat), pA] });
+        skPolyline(ask, "armPoly", { "points" : [pA, tA, c, tB, pB, vector(bossR, flatZ), pA] });
         skSolve(ask);
         var csk = newSketchOnPlane(context, id + "axleSketch", { "sketchPlane" : sidePlane });
         skCircle(csk, "axleBoss", { "center" : c, "radius" : aR });
@@ -144,8 +144,8 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             });
         }
 
-        // ---- swivel boss: plan view on a plane at Z = flat, extruded up to top -
-        var bsk = newSketchOnPlane(context, id + "bossSketch", { "sketchPlane" : plane(vector(0 * millimeter, 0 * millimeter, flat), vector(0, 0, 1), vector(1, 0, 0)) });
+        // ---- swivel boss: plan view on a plane at Z = flatZ, extruded up to top -
+        var bsk = newSketchOnPlane(context, id + "bossSketch", { "sketchPlane" : plane(vector(0 * millimeter, 0 * millimeter, flatZ), vector(0, 0, 1), vector(1, 0, 0)) });
         // half-round in front (x <= 0) + taper to the neck width
         skArc(bsk, "halfRound", { "start" : vector(0 * millimeter, bossR), "mid" : vector(-bossR, 0 * millimeter), "end" : vector(0 * millimeter, -bossR) });
         skPolyline(bsk, "taper", { "points" : [vector(0 * millimeter, -bossR), vector(definition.bossTaperX, -hw), vector(definition.bossTaperX, hw), vector(0 * millimeter, bossR)] });
@@ -154,10 +154,10 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "entities" : qSketchRegion(id + "bossSketch", true),
             "direction" : vector(0, 0, 1),
             "endBound" : BoundingType.BLIND,
-            "endDepth" : top - flat
+            "endDepth" : top - flatZ
         });
         // ---- cap: intersect the boss with a body of revolution about the shaft
-        //      axis — full radius for the top band, 45° cone, stem around the bore
+        //      axis - full radius for the top band, 45 deg cone, stem around the bore
         const capBandZ = top - definition.capT;
         const stemTopZ = capBandZ - (bossR - definition.stemR);
         if (definition.stemR <= hw + 1 * millimeter)
@@ -168,7 +168,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         skPolyline(bsk2, "bell", { "points" : [
             vector(0 * millimeter, top + 0.1 * millimeter), vector(bossR + 0.1 * millimeter, top + 0.1 * millimeter),
             vector(bossR + 0.1 * millimeter, capBandZ + 0.1 * millimeter), vector(bossR, capBandZ), vector(definition.stemR, stemTopZ),
-            vector(definition.stemR, flat - 0.1 * millimeter), vector(0 * millimeter, flat - 0.1 * millimeter),
+            vector(definition.stemR, flatZ - 0.1 * millimeter), vector(0 * millimeter, flatZ - 0.1 * millimeter),
             vector(0 * millimeter, top + 0.1 * millimeter)] });
         skSolve(bsk2);
         opRevolve(context, id + "bell", {
@@ -181,7 +181,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "operationType" : BooleanOperationType.INTERSECTION
         });
         // the intersection result is a new body; pick it up by exclusion
-        //  — only among bodies this feature made, so pre-existing parts in the Part Studio are never touched
+        //  - only among bodies this feature made, so pre-existing parts in the Part Studio are never touched
         const capBody = qUnion(evaluateQuery(context, qSubtraction(qBodyType(qCreatedBy(id, EntityType.BODY), BodyType.SOLID),
                 qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "arm", EntityType.BODY), qCreatedBy(id + "axleBoss", EntityType.BODY)]))));
         if (size(evaluateQuery(context, capBody)) != 1)
@@ -216,12 +216,12 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         });
 
         // ---- DFM / cosmetics (all best effort; a failed fillet leaves the edge sharp) ----
-        // internal corner radii where the arm meets the flat (pA) and the boss rear (pB)
+        // internal corner radii where the arm meets the flatZ (pA) and the boss rear (pB)
         if (definition.armInnerR > 0)
         {
             const yEdges = qParallelEdges(qOwnedByBody(body, EntityType.EDGE), vector(0, 1, 0));
             filletCascade(context, id + "innerR", qUnion([
-                qContainsPoint(yEdges, vector(definition.armFrontX, 0 * millimeter, flat)),
+                qContainsPoint(yEdges, vector(definition.armFrontX, 0 * millimeter, flatZ)),
                 qContainsPoint(yEdges, vector(bossR, 0 * millimeter, armTop))]), definition.armInnerR);
         }
         // arm outline rounds: edges lying in the neck side planes, outside the boss footprint
@@ -237,7 +237,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
                     const bb = evBox3d(context, { "topology" : e });
                     const cx = (bb.minCorner[0] + bb.maxCorner[0]) / 2;
                     const cz = (bb.minCorner[2] + bb.maxCorner[2]) / 2;
-                    if (cx > bossR + 0.2 * millimeter || cz < flat - 0.2 * millimeter)
+                    if (cx > bossR + 0.2 * millimeter || cz < flatZ - 0.2 * millimeter)
                         armEdges = append(armEdges, e);
                 }
             }
@@ -291,7 +291,7 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
         });
         fCylinder(context, id + "boltHole", {
             "topCenter" : vector(0 * millimeter, 0 * millimeter, stepZ + 1 * millimeter),
-            "bottomCenter" : vector(0 * millimeter, 0 * millimeter, flat - 1 * millimeter),
+            "bottomCenter" : vector(0 * millimeter, 0 * millimeter, flatZ - 1 * millimeter),
             "radius" : definition.boltHoleD / 2
         });
         fCylinder(context, id + "axleBore", {
@@ -370,6 +370,8 @@ function filletCascade(context is Context, id is Id, edges is Query, r is ValueW
 function tangentPoint(p is Vector, c is Vector, r is ValueWithUnits, upper is boolean) returns Vector
 {
     const d = norm(p - c);
+    if (d <= r * 1.02)
+        throw regenError("Arm attachment point lies inside (or grazes) the axle boss: reduce 'Arm leaves flat at X' or the axle boss radius, or raise the flat.");
     const phi = atan2(p[1] - c[1], p[0] - c[0]);
     const alpha = acos(r / d);
     const a = c + r * vector(cos(phi + alpha), sin(phi + alpha));
