@@ -181,8 +181,11 @@ export const luggageCarriage = defineFeature(function(context is Context, id is 
             "operationType" : BooleanOperationType.INTERSECTION
         });
         // the intersection result is a new body; pick it up by exclusion
-        const capBody = qUnion(evaluateQuery(context, qSubtraction(qBodyType(qEverything(EntityType.BODY), BodyType.SOLID),
+        //  — only among bodies this feature made, so pre-existing parts in the Part Studio are never touched
+        const capBody = qUnion(evaluateQuery(context, qSubtraction(qBodyType(qCreatedBy(id, EntityType.BODY), BodyType.SOLID),
                 qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "arm", EntityType.BODY), qCreatedBy(id + "axleBoss", EntityType.BODY)]))));
+        if (size(evaluateQuery(context, capBody)) != 1)
+            throw regenError("Cap intersection did not produce exactly one body.");
         opBoolean(context, id + "bodyUnion", {
             "tools" : qUnion([qCreatedBy(id + "neck", EntityType.BODY), qCreatedBy(id + "arm", EntityType.BODY),
                               qCreatedBy(id + "axleBoss", EntityType.BODY), capBody]),
